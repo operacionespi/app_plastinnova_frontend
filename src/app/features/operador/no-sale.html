@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>{{ marcar ? 'Marcar como No sale' : 'Devolver la línea' }}</h2>
+<form (submit)="guardar($event)" novalidate>
+  <mat-dialog-content>
+    <p class="resumen">
+      <strong>Pedido {{ linea.numeroPedido }} · Pos. {{ linea.posicion }}</strong>
+      <span>{{ linea.productoSku }} {{ linea.productoNombre }}</span>
+    </p>
+    <p class="estado-actual">Etapa actual: <pi-estado-chip [estado]="linea.estadoActual" /></p>
+    <p class="ayuda">
+      @if (marcar) {
+        La línea no se despachará por no disponibilidad del producto y sale de la cola de trabajo.
+        Si es la última línea pendiente del pedido, <strong>el pedido quedará anulado</strong>.
+      } @else {
+        La línea vuelve a la etapa en que estaba antes de marcarse No sale. Si el pedido estaba
+        anulado, se reabre en el estado que tenía.
+      }
+    </p>
+
+    @if (error(); as mensaje) {
+      <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    }
+
+    <mat-form-field appearance="outline" class="campo">
+      <mat-label>Justificación</mat-label>
+      <textarea matInput rows="3" [formField]="formulario.justificacion"></textarea>
+      <mat-hint align="end">{{ datos().justificacion.length }}/500</mat-hint>
+      @for (e of formulario.justificacion().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="formulario().submitting()">
+      {{ marcar ? 'Marcar No sale' : 'Devolver línea' }}
+    </button>
+  </mat-dialog-actions>
+</form>

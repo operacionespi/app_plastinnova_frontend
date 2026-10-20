@@ -1,0 +1,65 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.contenedor {
+  height: 100%;
+}
+
+.encabezado {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.barra {
+  gap: 8px;
+  background-color: var(--mat-sys-surface-container);
+}
+
+.marca,
+.marca-lateral {
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
+}
+
+.marca-lateral {
+  padding: 20px 16px 12px;
+}
+
+.menu-lateral {
+  width: 240px;
+}
+
+.espacio {
+  flex: 1;
+}
+
+.contenido {
+  padding: 24px;
+}
+
+// Tablet: objetivos táctiles grandes (mínimo 48px) y separados
+.opciones-tablet {
+  display: flex;
+  gap: 12px;
+  margin-left: 24px;
+}
+
+.opcion-tablet {
+  min-height: 48px;
+  padding-inline: 20px;
+  font: var(--mat-sys-title-medium);
+}
+
+.opcion-tablet.activa {
+  background-color: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+@media (max-width: 599px) {
+  .contenido {
+    padding: 16px;
+  }
+}

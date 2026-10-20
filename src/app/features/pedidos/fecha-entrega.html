@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>Fecha de entrega · Pedido {{ pedido.numeroPedido }}</h2>
+<form (submit)="guardar($event)" novalidate>
+  <mat-dialog-content>
+    <p class="ayuda">
+      Día comprometido con el cliente. El pedido se marca como atrasado desde el día siguiente si
+      sigue abierto.
+    </p>
+    @if (error(); as mensaje) {
+      <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    }
+    <mat-form-field appearance="outline" class="ancho">
+      <mat-label>Fecha estimada de entrega</mat-label>
+      <input matInput type="date" [formField]="formulario.fecha" />
+      @for (e of formulario.fecha().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    @if (pedido.fechaEstimadaEntrega) {
+      <button
+        matButton
+        type="button"
+        class="izquierda"
+        [disabled]="guardando() || formulario().submitting()"
+        (click)="quitar()"
+      >
+        Quitar fecha
+      </button>
+    }
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="guardando() || formulario().submitting()">
+      Guardar
+    </button>
+  </mat-dialog-actions>
+</form>

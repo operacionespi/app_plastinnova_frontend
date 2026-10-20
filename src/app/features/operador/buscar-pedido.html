@@ -1,0 +1,36 @@
+<h1>Buscar pedido</h1>
+
+<form class="busqueda" role="search" (submit)="buscar($event)" novalidate>
+  <mat-form-field appearance="outline" class="campo">
+    <mat-label>Número de pedido</mat-label>
+    <input
+      matInput
+      type="search"
+      inputmode="numeric"
+      autocomplete="off"
+      enterkeyhint="search"
+      [formField]="formulario.numero"
+    />
+    <mat-hint>Puede escribir solo el inicio del número</mat-hint>
+  </mat-form-field>
+  <button matButton="filled" type="submit" class="buscar">
+    <mat-icon>search</mat-icon>
+    Buscar
+  </button>
+</form>
+
+@if (buscado()) {
+  <h2 class="cdk-visually-hidden">Resultados para {{ buscado() }}</h2>
+  <pi-lista-lineas
+    [filtro]="filtro()"
+    [mensajeVacio]="
+      'No hay líneas pendientes en pedidos que empiecen por ' +
+      buscado() +
+      '. Puede que el pedido ya esté entregado o aún no se haya sincronizado desde FileMaker.'
+    "
+  />
+} @else {
+  <p class="ayuda">
+    Escriba el número del pedido para ver sus líneas pendientes y reportar su avance.
+  </p>
+}

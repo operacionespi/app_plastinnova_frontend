@@ -1,0 +1,58 @@
+<section class="pagina" aria-labelledby="titulo">
+  <h1 id="titulo">Cambiar contraseña</h1>
+  @if (sesion.debeCambiarContrasena()) {
+    <p class="aviso-temporal" role="status">
+      Está usando una contraseña temporal. Cámbiela para empezar a usar la aplicación: escriba la
+      temporal como contraseña actual y elija una nueva que solo usted conozca.
+    </p>
+  }
+  <p class="ayuda">
+    Mínimo 8 caracteres. Las sesiones abiertas en otros equipos siguen activas hasta que expiren.
+  </p>
+
+  @if (error(); as mensaje) {
+    <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+  }
+
+  <form (submit)="guardar($event)" novalidate>
+    <mat-form-field appearance="outline">
+      <mat-label>Contraseña actual</mat-label>
+      <input
+        matInput
+        type="password"
+        autocomplete="current-password"
+        [formField]="formulario.actual"
+      />
+      @for (e of formulario.actual().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Contraseña nueva</mat-label>
+      <input matInput type="password" autocomplete="new-password" [formField]="formulario.nueva" />
+      @for (e of formulario.nueva().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Repita la contraseña nueva</mat-label>
+      <input
+        matInput
+        type="password"
+        autocomplete="new-password"
+        [formField]="formulario.confirmacion"
+      />
+      @for (e of formulario.confirmacion().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="acciones">
+      <button matButton="filled" type="submit" [disabled]="formulario().submitting()">
+        Guardar
+      </button>
+    </div>
+  </form>
+</section>

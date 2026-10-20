@@ -1,0 +1,67 @@
+<h2 mat-dialog-title>Cambiar estado · Pedido {{ pedido.numeroPedido }}</h2>
+<form (submit)="guardar($event)" novalidate>
+  <mat-dialog-content>
+    <p class="fila">Estado actual: <pi-estado-chip [estado]="pedido.estadoActual" /></p>
+
+    @if (error(); as mensaje) {
+      <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    }
+
+    <fieldset class="grupo">
+      <legend id="leyenda-estado">Pasa a</legend>
+      @if (destinos.isLoading()) {
+        <mat-progress-bar mode="indeterminate" aria-label="Cargando los estados siguientes" />
+      } @else if (errorDestinos(); as mensaje) {
+        <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+        <button matButton type="button" (click)="destinos.reload()">Reintentar</button>
+      } @else if (destinos.value()?.length) {
+        <mat-button-toggle-group
+          aria-labelledby="leyenda-estado"
+          [value]="datos().destinoId"
+          (change)="elegirDestino($event.value)"
+        >
+          @for (destino of destinos.value(); track destino.id) {
+            <mat-button-toggle [value]="destino.id">
+              <span
+                class="punto"
+                aria-hidden="true"
+                [style.background-color]="destino.color ?? null"
+              ></span>
+              {{ destino.nombre }}
+            </mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+        @if (formulario.destinoId().touched()) {
+          @for (e of formulario.destinoId().errors(); track e.kind) {
+            <p class="error-campo" role="alert">{{ e.message }}</p>
+          }
+        }
+      } @else {
+        <p class="mensaje-error" role="alert">
+          El estado {{ pedido.estadoActual?.nombre }} no tiene estados siguientes configurados (ver
+          Configuración → Estados).
+        </p>
+      }
+    </fieldset>
+
+    <mat-form-field appearance="outline" class="ancho">
+      <mat-label>Observaciones (opcional)</mat-label>
+      <textarea matInput rows="2" [formField]="formulario.observaciones"></textarea>
+      <mat-hint align="end">{{ datos().observaciones.length }}/500</mat-hint>
+      @for (e of formulario.observaciones().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button
+      matButton="filled"
+      type="submit"
+      [disabled]="formulario().submitting() || !destinos.value()?.length"
+    >
+      Guardar
+    </button>
+  </mat-dialog-actions>
+</form>

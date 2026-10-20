@@ -1,0 +1,134 @@
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+
+  button {
+    min-height: 48px;
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+}
+
+.buscar {
+  width: min(100%, 360px);
+}
+
+.estado-carga {
+  min-height: 4px;
+  margin: 8px 0;
+}
+
+.tabla {
+  overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+table {
+  width: 100%;
+}
+
+td.mat-mdc-cell {
+  padding-block: 8px;
+}
+
+.principal,
+.secundario {
+  display: block;
+}
+
+.principal {
+  font-weight: 500;
+}
+
+.tu {
+  font-weight: 400;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.secundario {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 2px 10px;
+    border-radius: var(--mat-sys-corner-full);
+    background: var(--mat-sys-surface-container-high);
+    font: var(--mat-sys-label-large);
+    white-space: nowrap;
+  }
+}
+
+.etiqueta {
+  white-space: nowrap;
+  font: var(--mat-sys-label-large);
+
+  &.activo {
+    color: var(--mat-sys-primary);
+  }
+
+  &.temporal {
+    padding: 2px 10px;
+    border-radius: var(--mat-sys-corner-full);
+    background: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+
+  &.inactivo {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+tr.inactiva td {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.acciones {
+  width: 56px;
+  text-align: right;
+}
+
+.vacio {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.nota {
+  margin: 12px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mensaje-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}

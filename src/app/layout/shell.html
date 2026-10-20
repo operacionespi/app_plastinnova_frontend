@@ -1,0 +1,72 @@
+@if (navegacion.modoTablet()) {
+  <header class="encabezado">
+    <mat-toolbar class="barra">
+      <span class="marca">PlastInnova</span>
+      <nav class="opciones-tablet" aria-label="Navegación principal">
+        @for (opcion of navegacion.opciones(); track opcion.ruta) {
+          <a
+            matButton="tonal"
+            class="opcion-tablet"
+            [routerLink]="opcion.ruta"
+            routerLinkActive="activa"
+            ariaCurrentWhenActive="page"
+          >
+            <mat-icon>{{ opcion.icono }}</mat-icon>
+            {{ opcion.etiqueta }}
+          </a>
+        }
+      </nav>
+      <span class="espacio"></span>
+      <pi-menu-usuario />
+    </mat-toolbar>
+  </header>
+  <main class="contenido">
+    <router-outlet />
+  </main>
+} @else {
+  <mat-sidenav-container class="contenedor">
+    <mat-sidenav
+      #menu
+      [mode]="pantallaAncha() ? 'side' : 'over'"
+      [opened]="pantallaAncha()"
+      class="menu-lateral"
+    >
+      <nav aria-label="Navegación principal">
+        <div class="marca-lateral">PlastInnova</div>
+        <mat-nav-list>
+          @for (opcion of navegacion.opciones(); track opcion.ruta) {
+            <a
+              mat-list-item
+              [routerLink]="opcion.ruta"
+              routerLinkActive
+              #activa="routerLinkActive"
+              [activated]="activa.isActive"
+              ariaCurrentWhenActive="page"
+              (click)="pantallaAncha() || menu.close()"
+            >
+              <mat-icon matListItemIcon>{{ opcion.icono }}</mat-icon>
+              <span matListItemTitle>{{ opcion.etiqueta }}</span>
+            </a>
+          }
+        </mat-nav-list>
+      </nav>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <header class="encabezado">
+        <mat-toolbar class="barra">
+          @if (!pantallaAncha()) {
+            <button matIconButton (click)="menu.toggle()" aria-label="Abrir el menú">
+              <mat-icon>menu</mat-icon>
+            </button>
+            <span class="marca">PlastInnova</span>
+          }
+          <span class="espacio"></span>
+          <pi-menu-usuario />
+        </mat-toolbar>
+      </header>
+      <main class="contenido">
+        <router-outlet />
+      </main>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+}

@@ -1,0 +1,242 @@
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+}
+
+section {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+h2 {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+}
+
+.rango {
+  margin-left: 8px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// Cifras grandes del día
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.cifra {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+
+  &:is(a):hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  &:is(a):focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+
+  .valor {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: var(--mat-sys-display-small);
+  }
+
+  &.alerta {
+    background: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+
+    .etiqueta,
+    .detalle {
+      color: inherit;
+    }
+  }
+}
+
+.etiqueta {
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detalle {
+  display: block;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+// Barras horizontales: una tabla con la barra como apoyo visual (el número siempre está)
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  text-align: left;
+  font: var(--mat-sys-body-medium);
+}
+
+thead th {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+
+tbody th {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pista {
+  width: 50%;
+  min-width: 80px;
+}
+
+.barra {
+  display: block;
+  height: 14px;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background-color: var(--mat-sys-outline);
+
+  &.primaria {
+    background-color: var(--mat-sys-primary);
+  }
+}
+
+.tabla tbody tr {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.total {
+  font-weight: 500;
+}
+
+// Enfocable: en pantallas angostas la tabla se recorre con el teclado
+.desplazable {
+  overflow-x: auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.enlace {
+  color: var(--mat-sys-primary);
+}
+
+.tenue {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.nota {
+  margin: 12px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.vacio {
+  margin: 16px 0;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// Selección del periodo
+.periodo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.fecha {
+  width: 170px;
+}
+
+.error-fechas {
+  flex-basis: 100%;
+  margin: 0;
+  min-height: 1lh;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-error);
+}
+
+// Datos de entregas y tiempo de ciclo
+.datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 0;
+
+  dt {
+    font: var(--mat-sys-title-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 4px 0 0;
+  }
+
+  .valor {
+    display: block;
+    font: var(--mat-sys-headline-medium);
+  }
+
+  .alerta {
+    color: var(--mat-sys-error);
+  }
+}
+
+.fases {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  mat-form-field {
+    width: 170px;
+  }
+}
+
+.aviso-fases {
+  flex-basis: 100%;
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-error);
+
+  &:empty {
+    display: none;
+  }
+}

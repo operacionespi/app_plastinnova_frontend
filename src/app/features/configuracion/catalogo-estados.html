@@ -1,0 +1,177 @@
+@if (error(); as mensaje) {
+  <div class="mensaje-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button matButton type="button" (click)="estados.reload(); transiciones.reload()">
+      Reintentar
+    </button>
+  </div>
+}
+
+<section [attr.aria-labelledby]="'titulo-estados-' + tipo()">
+  <div class="cabecera">
+    <h2 [id]="'titulo-estados-' + tipo()">Estados</h2>
+    <mat-slide-toggle
+      [checked]="incluirInactivos()"
+      (change)="incluirInactivos.set($event.checked)"
+    >
+      Mostrar inactivos
+    </mat-slide-toggle>
+    <span class="espacio"></span>
+    <button matButton="filled" type="button" (click)="crear()">
+      <mat-icon>add</mat-icon>
+      Nuevo estado
+    </button>
+  </div>
+
+  <div class="estado-carga">
+    @if (estados.isLoading()) {
+      <mat-progress-bar mode="indeterminate" aria-label="Cargando estados" />
+    }
+  </div>
+
+  <div class="tabla">
+    <table
+      mat-table
+      [dataSource]="estados.value() ?? []"
+      [attr.aria-label]="'Estados de ' + nombreCatalogo()"
+    >
+      <ng-container matColumnDef="orden">
+        <th mat-header-cell *matHeaderCellDef>Orden</th>
+        <td mat-cell *matCellDef="let e">{{ e.ordenLogico }}</td>
+      </ng-container>
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+        <td mat-cell *matCellDef="let e">
+          <span class="punto" aria-hidden="true" [style.background-color]="e.color ?? null"></span>
+          <strong>{{ e.nombre }}</strong>
+          @if (e.descripcion) {
+            <span class="secundario">{{ e.descripcion }}</span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="codigo">
+        <th mat-header-cell *matHeaderCellDef>Código</th>
+        <td mat-cell *matCellDef="let e">
+          <code>{{ e.codigo }}</code>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="tipo">
+        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+        <td mat-cell *matCellDef="let e">
+          @if (e.esInicial) {
+            <span class="marca">Inicial</span>
+          }
+          @if (e.esFinal) {
+            <span class="marca final">Final</span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="activo">
+        <th mat-header-cell *matHeaderCellDef>Situación</th>
+        <td mat-cell *matCellDef="let e">{{ e.activo === false ? 'Inactivo' : 'Activo' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
+        <td mat-cell *matCellDef="let e" class="acciones">
+          <button
+            matIconButton
+            type="button"
+            [attr.aria-label]="'Editar ' + e.nombre"
+            matTooltip="Editar"
+            (click)="editar(e)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          @if (e.activo === false) {
+            <button
+              matIconButton
+              type="button"
+              [attr.aria-label]="'Activar ' + e.nombre"
+              matTooltip="Activar"
+              (click)="activar(e)"
+            >
+              <mat-icon>restore</mat-icon>
+            </button>
+          } @else {
+            <button
+              matIconButton
+              type="button"
+              [attr.aria-label]="'Eliminar ' + e.nombre"
+              matTooltip="Eliminar"
+              (click)="eliminar(e)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr
+        mat-row
+        *matRowDef="let fila; columns: columnas"
+        [class.inactivo]="fila.activo === false"
+      ></tr>
+    </table>
+  </div>
+</section>
+
+<section [attr.aria-labelledby]="'titulo-flujo-' + tipo()">
+  <div class="cabecera">
+    <h2 [id]="'titulo-flujo-' + tipo()">Transiciones permitidas</h2>
+    <span class="espacio"></span>
+    <button matButton="outlined" type="button" (click)="agregarTransicion()">
+      <mat-icon>add</mat-icon>
+      Nueva transición
+    </button>
+  </div>
+  <p class="ayuda">
+    Desde cada estado solo se puede pasar a los destinos listados. Así se ofrecen en la tablet y al
+    cambiar el estado de un pedido.
+  </p>
+
+  <ul class="flujo">
+    @for (fila of flujo(); track fila.estado.id) {
+      <li>
+        <span class="origen">
+          <span
+            class="punto"
+            aria-hidden="true"
+            [style.background-color]="fila.estado.color ?? null"
+          ></span>
+          {{ fila.estado.nombre }}
+        </span>
+        <mat-icon class="flecha" aria-hidden="true">arrow_forward</mat-icon>
+        <span class="salidas">
+          @for (t of fila.salidas; track t.id) {
+            <span class="salida">
+              {{ t.estadoDestino?.nombre }}
+              <button
+                matIconButton
+                type="button"
+                class="quitar"
+                [attr.aria-label]="
+                  'Quitar transición de ' + fila.estado.nombre + ' a ' + t.estadoDestino?.nombre
+                "
+                (click)="quitarTransicion(t)"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </span>
+          } @empty {
+            <span class="secundario">{{
+              fila.estado.esFinal ? 'Estado final' : 'Sin salidas'
+            }}</span>
+          }
+          <button
+            matIconButton
+            type="button"
+            [attr.aria-label]="'Agregar transición desde ' + fila.estado.nombre"
+            (click)="agregarTransicion(fila.estado)"
+          >
+            <mat-icon>add_circle</mat-icon>
+          </button>
+        </span>
+      </li>
+    }
+  </ul>
+</section>

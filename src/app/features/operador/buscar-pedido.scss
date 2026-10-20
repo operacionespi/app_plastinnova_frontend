@@ -1,0 +1,33 @@
+h1 {
+  margin: 0 0 16px;
+  font: var(--mat-sys-headline-small);
+}
+
+.busqueda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.campo {
+  flex: 1 1 280px;
+  max-width: 420px;
+
+  input {
+    font: var(--mat-sys-headline-small);
+  }
+}
+
+// Misma altura que el campo para tocarlo fácil
+.buscar {
+  min-height: 56px;
+  padding-inline: 24px;
+}
+
+.ayuda {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}

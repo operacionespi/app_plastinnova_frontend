@@ -1,0 +1,470 @@
+<div class="cabecera">
+  <h1>Tableros</h1>
+  <button matButton type="button" (click)="actualizar()">
+    <mat-icon>refresh</mat-icon>
+    Actualizar
+  </button>
+</div>
+
+<!-- Estado actual: no depende del periodo -->
+<section aria-labelledby="titulo-hoy">
+  <h2 id="titulo-hoy">Hoy en la planta</h2>
+
+  <div class="cifras">
+    <a class="cifra" routerLink="/pedidos">
+      <span class="etiqueta">Pedidos abiertos</span>
+      <span class="valor">{{
+        pedidosPorEstado.hasValue() ? (totalAbiertos() | number) : '—'
+      }}</span>
+      <span class="detalle">Ver el listado</span>
+    </a>
+    <a
+      class="cifra"
+      routerLink="/pedidos"
+      [queryParams]="{ atrasados: '1' }"
+      [class.alerta]="(atrasados.value() ?? 0) > 0"
+    >
+      <span class="etiqueta">Pedidos atrasados</span>
+      <span class="valor">
+        @if ((atrasados.value() ?? 0) > 0) {
+          <mat-icon aria-hidden="true">warning</mat-icon>
+        }
+        {{ atrasados.hasValue() ? (atrasados.value() | number) : '—' }}
+      </span>
+      <span class="detalle">
+        @if (atrasados.error()) {
+          No se pudo consultar
+        } @else if (porcentaje(atrasados.value(), totalAbiertos()) !== null) {
+          {{ porcentaje(atrasados.value(), totalAbiertos()) }} % de los abiertos
+        } @else {
+          Con fecha de entrega vencida
+        }
+      </span>
+    </a>
+    <div class="cifra">
+      <span class="etiqueta">Líneas en producción</span>
+      <span class="valor">
+        {{ lineasPorEstado.hasValue() ? (totalesEnProceso().lineas | number) : '—' }}
+      </span>
+      <span class="detalle">
+        {{ cantidad(totalesEnProceso().piezas, 'pieza', 'piezas')
+        }}{{ alistamientoActual() === 'TODOS' ? '' : ' · ' + (alistamientoActual() | lowercase) }}
+      </span>
+    </div>
+  </div>
+
+  <div class="rejilla">
+    <pi-seccion-tablero titulo="Pedidos abiertos por estado" [recurso]="pedidosPorEstado">
+      <table class="barras">
+        <caption class="cdk-visually-hidden">
+          Pedidos abiertos por estado
+        </caption>
+        <thead class="cdk-visually-hidden">
+          <tr>
+            <th scope="col">Estado</th>
+            <th scope="col">Proporción</th>
+            <th scope="col">Pedidos</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of pedidosAbiertos(); track e.estadoId) {
+            <tr>
+              <th scope="row">
+                <a
+                  class="enlace"
+                  routerLink="/pedidos"
+                  [queryParams]="enlaceEstado(e.estadoId, e.esFinal)"
+                  >{{ e.nombre }}</a
+                >
+              </th>
+              <td class="pista" aria-hidden="true">
+                <span
+                  class="barra"
+                  [style.width.%]="proporcion(e.pedidos, maximoPedidosEstado())"
+                  [style.background-color]="e.color ?? null"
+                ></span>
+              </td>
+              <td class="numero">{{ e.pedidos | number }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td class="vacio" colspan="3">No hay estados configurados.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (pedidosCerrados().length) {
+        <p class="nota">
+          Cerrados (histórico):
+          @for (e of pedidosCerrados(); track e.estadoId; let ultimo = $last) {
+            <a class="enlace" routerLink="/pedidos" [queryParams]="enlaceEstado(e.estadoId, true)"
+              >{{ e.nombre }} {{ e.pedidos | number }}</a
+            >{{ ultimo ? '' : ' · ' }}
+          }
+        </p>
+      }
+    </pi-seccion-tablero>
+
+    <pi-seccion-tablero titulo="Carga de producción por etapa" [recurso]="lineasPorEstado">
+      <mat-button-toggle-group
+        acciones
+        hideSingleSelectionIndicator
+        aria-label="Tipo de alistamiento"
+        [value]="alistamientoActual()"
+        (change)="navegar({ alistamiento: $event.value === 'TODOS' ? null : $event.value })"
+      >
+        <mat-button-toggle value="TODOS">Todos</mat-button-toggle>
+        <mat-button-toggle value="NACIONAL">Nacional</mat-button-toggle>
+        <mat-button-toggle value="INTERNACIONAL">Internacional</mat-button-toggle>
+      </mat-button-toggle-group>
+      <table class="barras">
+        <caption class="cdk-visually-hidden">
+          Líneas y piezas en cada etapa
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="cdk-visually-hidden">Etapa</span></th>
+            <th scope="col"><span class="cdk-visually-hidden">Proporción</span></th>
+            <th scope="col" class="numero">Líneas</th>
+            <th scope="col" class="numero">Piezas</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of lineasEnProceso(); track e.estadoId) {
+            <tr>
+              <th scope="row">{{ e.nombre }}</th>
+              <td class="pista" aria-hidden="true">
+                <span
+                  class="barra"
+                  [style.width.%]="proporcion(e.lineas, maximoLineasEstado())"
+                  [style.background-color]="e.color ?? null"
+                ></span>
+              </td>
+              <td class="numero">{{ e.lineas | number }}</td>
+              <td class="numero">{{ e.piezasSolicitadas | number }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td class="vacio" colspan="4">No hay etapas configuradas.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @for (e of lineasTerminadas(); track e.estadoId) {
+        <p class="nota">
+          {{ e.nombre }} (histórico): {{ cantidad(e.lineas, 'línea', 'líneas') }} ·
+          {{ cantidad(e.piezasSolicitadas, 'pieza', 'piezas') }}
+        </p>
+      }
+    </pi-seccion-tablero>
+  </div>
+</section>
+
+<!-- Indicadores del periodo -->
+<section aria-labelledby="titulo-periodo">
+  <div class="cabecera-periodo">
+    <h2 id="titulo-periodo">
+      Periodo
+      <span class="rango">
+        {{ periodo().desde | dia | date: 'd MMM y' }} –
+        {{ periodo().hasta | dia | date: 'd MMM y' }} · {{ dias() }}
+        {{ dias() === 1 ? 'día' : 'días' }}
+      </span>
+    </h2>
+  </div>
+
+  <div class="periodo" role="group" aria-label="Periodo de los indicadores">
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      aria-label="Periodos frecuentes"
+      [value]="atajo()"
+      (change)="elegirAtajo($event.value)"
+    >
+      @for (a of atajos; track a.valor) {
+        <mat-button-toggle [value]="a.valor">{{ a.etiqueta }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+
+    <mat-form-field appearance="outline" class="fecha" subscriptSizing="dynamic">
+      <mat-label>Desde</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="fechas().desde"
+        (change)="cambiarFecha('desde', $any($event.target).value)"
+        [attr.aria-invalid]="!!errorFechas()"
+        aria-describedby="error-fechas"
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="fecha" subscriptSizing="dynamic">
+      <mat-label>Hasta</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="fechas().hasta"
+        (change)="cambiarFecha('hasta', $any($event.target).value)"
+        [attr.aria-invalid]="!!errorFechas()"
+        aria-describedby="error-fechas"
+      />
+    </mat-form-field>
+    <p id="error-fechas" class="error-fechas" aria-live="polite">{{ errorFechas() }}</p>
+  </div>
+
+  <div class="rejilla">
+    <pi-seccion-tablero titulo="Entregas" [recurso]="entrega">
+      @if (entrega.value(); as e) {
+        @let otif = porcentaje(e.pedidosOtif, e.pedidosConFechaEntrega);
+        @let aTiempo = porcentaje(e.pedidosATiempo, e.pedidosConFechaEntrega);
+        @let completos = porcentaje(e.pedidosCompletos, e.pedidosCerrados);
+        <dl class="datos">
+          <div>
+            <dt>OTIF</dt>
+            <dd>
+              <span class="valor" [class.alerta]="otif !== null && otif < meta">
+                {{ otif === null ? '—' : otif + ' %' }}
+              </span>
+              <span class="detalle">
+                {{ e.pedidosOtif | number }} de {{ e.pedidosConFechaEntrega | number }} a tiempo y
+                completos
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>A tiempo</dt>
+            <dd>
+              <span class="valor" [class.alerta]="aTiempo !== null && aTiempo < meta">
+                {{ aTiempo === null ? '—' : aTiempo + ' %' }}
+              </span>
+              <span class="detalle">
+                {{ e.pedidosATiempo | number }} de {{ e.pedidosConFechaEntrega | number }} con fecha
+                de entrega
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Completos</dt>
+            <dd>
+              <span class="valor" [class.alerta]="completos !== null && completos < meta">
+                {{ completos === null ? '—' : completos + ' %' }}
+              </span>
+              <span class="detalle">
+                {{ e.pedidosCompletos | number }} de {{ e.pedidosCerrados | number }} cerrados
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Tiempo de entrega</dt>
+            <dd>
+              <span class="valor">{{ e.promedioDias | number: '1.0-1' }} días</span>
+              <span class="detalle">
+                promedio de
+                {{ cantidad(e.pedidosCerrados, 'pedido cerrado', 'pedidos cerrados') }} · de
+                {{ e.minimoDias | number: '1.0-1' }} a {{ e.maximoDias | number: '1.0-1' }} días
+              </span>
+            </dd>
+          </div>
+        </dl>
+        @if ((e.pedidosCerrados ?? 0) > (e.pedidosConFechaEntrega ?? 0)) {
+          <p class="nota">
+            @let sinFecha = (e.pedidosCerrados ?? 0) - (e.pedidosConFechaEntrega ?? 0);
+            {{ cantidad(sinFecha, 'pedido se cerró', 'pedidos se cerraron') }} sin fecha de entrega:
+            no {{ sinFecha === 1 ? 'cuenta' : 'cuentan' }} para "a tiempo" ni para el OTIF.
+          </p>
+        }
+        <p class="nota">
+          A tiempo: cerrado a más tardar el día de la fecha de entrega. Completo: todas sus líneas
+          en Entregado o No sale. Tiempo de entrega: desde la creación en FileMaker hasta el cierre.
+          Los pedidos anulados (todas sus líneas en No sale) no cuentan.
+        </p>
+      }
+    </pi-seccion-tablero>
+
+    <pi-seccion-tablero titulo="Tiempo de ciclo" [recurso]="ciclo">
+      <div class="fases" acciones>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Desde la etapa</mat-label>
+          <mat-select [value]="origenId()" (selectionChange)="navegar({ origen: $event.value })">
+            @for (e of etapas(); track e.id) {
+              <mat-option [value]="e.id">{{ e.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Hasta la etapa</mat-label>
+          <mat-select [value]="destinoId()" (selectionChange)="navegar({ destino: $event.value })">
+            @for (e of etapas(); track e.id) {
+              <mat-option [value]="e.id">{{ e.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <p class="aviso-fases" role="status">
+          @if (origenId() !== undefined && origenId() === destinoId()) {
+            Elija dos etapas distintas.
+          }
+        </p>
+      </div>
+      @if (ciclo.value(); as c) {
+        <dl class="datos">
+          <div>
+            <dt>Promedio</dt>
+            <dd>
+              <span class="valor">{{ c.promedioHoras | number: '1.0-1' }} h</span>
+              @if ((c.promedioHoras ?? 0) >= 24) {
+                <span class="detalle"
+                  >≈ {{ (c.promedioHoras ?? 0) / 24 | number: '1.0-1' }} días</span
+                >
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Rango</dt>
+            <dd>
+              <span class="valor"
+                >{{ c.minimoHoras | number: '1.0-1' }} –
+                {{ c.maximoHoras | number: '1.0-1' }} h</span
+              >
+            </dd>
+          </div>
+          <div>
+            <dt>Ciclos</dt>
+            <dd>
+              <span class="valor">{{ c.ciclos | number }}</span>
+              <span class="detalle"
+                >{{ cantidad(c.lineas, 'línea', 'líneas') }} ·
+                {{ cantidad(c.piezasProcesadas, 'pieza', 'piezas') }}</span
+              >
+            </dd>
+          </div>
+        </dl>
+        <p class="nota">
+          Desde que una línea entra a {{ c.faseOrigen }} hasta que llega a {{ c.faseDestino }}, para
+          las que llegaron en el periodo. Cada reproceso cuenta como un ciclo.
+        </p>
+      }
+    </pi-seccion-tablero>
+  </div>
+
+  <pi-seccion-tablero titulo="Producción por operador" [recurso]="produccion">
+    @let tabla = tablaProduccion();
+    @if (tabla.filas.length) {
+      <div
+        class="desplazable"
+        tabindex="0"
+        role="group"
+        aria-label="Producción por operador (desplazable)"
+      >
+        <table class="tabla">
+          <caption class="cdk-visually-hidden">
+            Piezas reportadas por cada operador en cada etapa
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Operador</th>
+              @for (e of tabla.etapas; track e.id) {
+                <th scope="col" class="numero">{{ e.nombre }}</th>
+              }
+              <th scope="col" class="numero">Total piezas</th>
+              <th scope="col" class="numero">Reportes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of tabla.filas; track f.usuarioId) {
+              <tr>
+                <th scope="row">{{ f.nombre }}</th>
+                @for (e of tabla.etapas; track e.id) {
+                  <td class="numero">
+                    @if (f.etapas[e.id]; as celda) {
+                      {{ celda.piezas | number }}
+                    } @else {
+                      <span class="tenue" aria-label="Sin reportes">–</span>
+                    }
+                  </td>
+                }
+                <td class="numero total">{{ f.totalPiezas | number }}</td>
+                <td class="numero">{{ f.totalMovimientos | number }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="nota">
+        Piezas que cada operador reportó al pasar las líneas a cada etapa ({{
+          totalPiezasProduccion() | number
+        }}
+        en total). No incluye la sincronización ni las correcciones de cantidad.
+      </p>
+    } @else {
+      <p class="vacio">Nadie reportó avance en este periodo.</p>
+    }
+  </pi-seccion-tablero>
+
+  <pi-seccion-tablero titulo="Pedidos por ubicación de entrega" [recurso]="ubicaciones">
+    <mat-button-toggle-group
+      acciones
+      hideSingleSelectionIndicator
+      aria-label="Agrupar por"
+      [value]="nivelActual()"
+      (change)="navegar({ nivel: $event.value === 'CIUDAD' ? null : $event.value })"
+    >
+      @for (n of niveles; track n.valor) {
+        <mat-button-toggle [value]="n.valor">{{ n.etiqueta }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+    @let lista = ubicaciones.value() ?? [];
+    @if (lista.length) {
+      <div
+        class="desplazable"
+        tabindex="0"
+        role="group"
+        aria-label="Pedidos por ubicación (desplazable)"
+      >
+        <table class="barras tabla">
+          <caption class="cdk-visually-hidden">
+            Pedidos creados en el periodo por ubicación de entrega
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Ubicación</th>
+              <th scope="col"><span class="cdk-visually-hidden">Proporción</span></th>
+              <th scope="col" class="numero">Pedidos</th>
+              <th scope="col" class="numero">Cerrados</th>
+              <th scope="col" class="numero">Líneas</th>
+              <th scope="col" class="numero">Piezas</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (
+              u of verTodasUbicaciones() ? lista : lista.slice(0, ubicacionesIniciales);
+              track u.ubicacionId ?? -1
+            ) {
+              <tr>
+                <th scope="row" [class.tenue]="u.ubicacionId == null">
+                  {{ u.ubicacion }}
+                </th>
+                <td class="pista" aria-hidden="true">
+                  <span
+                    class="barra primaria"
+                    [style.width.%]="proporcion(u.pedidos, maximoPedidosUbicacion())"
+                  ></span>
+                </td>
+                <td class="numero">{{ u.pedidos | number }}</td>
+                <td class="numero">{{ u.pedidosCerrados | number }}</td>
+                <td class="numero">{{ u.lineas | number }}</td>
+                <td class="numero">{{ u.piezasSolicitadas | number }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (lista.length > ubicacionesIniciales) {
+        <button matButton type="button" (click)="verTodasUbicaciones.set(!verTodasUbicaciones())">
+          {{ verTodasUbicaciones() ? 'Ver menos' : 'Ver todas (' + lista.length + ')' }}
+        </button>
+      }
+      <p class="nota">Pedidos creados en FileMaker dentro del periodo.</p>
+    } @else {
+      <p class="vacio">No se crearon pedidos en este periodo.</p>
+    }
+  </pi-seccion-tablero>
+</section>

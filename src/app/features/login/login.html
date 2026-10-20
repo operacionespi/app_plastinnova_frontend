@@ -1,0 +1,60 @@
+<main class="pagina">
+  <section class="tarjeta" aria-labelledby="titulo-login">
+    @if (formulario().submitting()) {
+      <mat-progress-bar mode="indeterminate" class="progreso" aria-label="Ingresando" />
+    }
+    <h1 id="titulo-login">PlastInnova</h1>
+    <p class="subtitulo">Seguimiento de pedidos y producción</p>
+
+    @if (sesionExpirada()) {
+      <p class="mensaje info" role="status">Su sesión terminó. Ingrese de nuevo para continuar.</p>
+    }
+    @if (error(); as mensaje) {
+      <p class="mensaje error" role="alert">{{ mensaje }}</p>
+    }
+
+    <form (submit)="ingresar($event)" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" autocomplete="username" [formField]="formulario.email" />
+        <mat-icon matPrefix>mail</mat-icon>
+        @for (e of formulario.email().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contraseña</mat-label>
+        <input
+          matInput
+          [type]="verContrasena() ? 'text' : 'password'"
+          autocomplete="current-password"
+          [formField]="formulario.password"
+        />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button
+          matIconButton
+          matSuffix
+          type="button"
+          (click)="verContrasena.set(!verContrasena())"
+          [attr.aria-label]="verContrasena() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          [attr.aria-pressed]="verContrasena()"
+        >
+          <mat-icon>{{ verContrasena() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @for (e of formulario.password().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <button
+        matButton="filled"
+        type="submit"
+        class="ingresar"
+        [disabled]="formulario().submitting()"
+      >
+        Ingresar
+      </button>
+    </form>
+  </section>
+</main>

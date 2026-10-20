@@ -1,0 +1,69 @@
+<div class="cabecera">
+  <h1>Cola de trabajo</h1>
+  <button matButton="tonal" type="button" class="actualizar" (click)="actualizar()">
+    <mat-icon>refresh</mat-icon>
+    Actualizar
+  </button>
+</div>
+
+@if (errorCatalogo(); as mensaje) {
+  <div class="mensaje-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button matButton type="button" (click)="catalogo.reload()">Reintentar</button>
+  </div>
+} @else if (etapas().length) {
+  <div class="filtros">
+    <div class="filtro">
+      <span class="etiqueta" id="etiqueta-etapa">Etapa</span>
+      <div class="desplazable">
+        <mat-button-toggle-group
+          aria-labelledby="etiqueta-etapa"
+          [hideSingleSelectionIndicator]="true"
+          [value]="etapaId()"
+          (change)="etapaId.set($event.value)"
+        >
+          @for (etapa of etapas(); track etapa.id) {
+            <mat-button-toggle [value]="etapa.id">
+              <span
+                class="punto"
+                aria-hidden="true"
+                [style.background-color]="etapa.color ?? null"
+              ></span>
+              {{ etapa.nombre }}
+              @if (conteo(etapa.id); as total) {
+                <span class="conteo"
+                  >{{ total }}<span class="cdk-visually-hidden"> líneas</span></span
+                >
+              }
+            </mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+      </div>
+    </div>
+
+    <div class="filtro">
+      <span class="etiqueta" id="etiqueta-alistamiento">Alistamiento</span>
+      <mat-button-toggle-group
+        aria-labelledby="etiqueta-alistamiento"
+        [hideSingleSelectionIndicator]="true"
+        [value]="alistamiento()"
+        (change)="alistamiento.set($event.value)"
+      >
+        <mat-button-toggle value="TODOS">Todos</mat-button-toggle>
+        <mat-button-toggle value="NACIONAL">Nacional</mat-button-toggle>
+        <mat-button-toggle value="INTERNACIONAL">Internacional</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+
+  <h2 class="cdk-visually-hidden">Líneas en {{ nombreEtapa() }}</h2>
+  <pi-lista-lineas
+    [filtro]="filtro()"
+    [mensajeVacio]="'No hay líneas pendientes en ' + nombreEtapa() + '.'"
+    (cambio)="conteos.reload()"
+  />
+} @else if (catalogo.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Cargando etapas" />
+} @else {
+  <p class="vacio">No hay etapas configuradas. Avise al coordinador.</p>
+}

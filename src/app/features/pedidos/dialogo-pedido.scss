@@ -1,0 +1,68 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.ayuda {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.grupo {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 8px;
+    font: var(--mat-sys-title-small);
+  }
+}
+
+mat-button-toggle-group {
+  flex-wrap: wrap;
+}
+
+.punto {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.error-campo {
+  margin: 6px 0 0;
+  color: var(--mat-sys-error);
+  font: var(--mat-sys-body-small);
+}
+
+.ancho {
+  width: 100%;
+}
+
+mat-dialog-actions button {
+  min-height: 48px;
+  padding-inline: 24px;
+}
+
+.izquierda {
+  margin-right: auto;
+}
+
+.mensaje-error {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}

@@ -1,0 +1,92 @@
+<h2 mat-dialog-title>Reportar avance</h2>
+<form (submit)="guardar($event)" novalidate>
+  <mat-dialog-content>
+    <p class="resumen">
+      <strong>Pedido {{ linea.numeroPedido }} · Pos. {{ linea.posicion }}</strong>
+      <span>{{ linea.productoSku }} {{ linea.productoNombre }}</span>
+    </p>
+    <p class="estado-actual">Etapa actual: <pi-estado-chip [estado]="linea.estadoActual" /></p>
+
+    @if (error(); as mensaje) {
+      <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    }
+
+    <fieldset class="destinos">
+      <legend id="leyenda-destino">Pasa a</legend>
+      @if (destinos.isLoading()) {
+        <mat-progress-bar mode="indeterminate" aria-label="Cargando las etapas siguientes" />
+      } @else if (errorDestinos(); as mensaje) {
+        <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+        <button matButton type="button" (click)="destinos.reload()">Reintentar</button>
+      } @else if (destinos.value()?.length) {
+        <mat-button-toggle-group
+          aria-labelledby="leyenda-destino"
+          [value]="datos().destinoId"
+          (change)="elegirDestino($event.value)"
+        >
+          @for (destino of destinos.value(); track destino.id) {
+            <mat-button-toggle [value]="destino.id">
+              <span
+                class="punto"
+                aria-hidden="true"
+                [style.background-color]="destino.color ?? null"
+              ></span>
+              {{ destino.nombre }}
+            </mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+        @if (formulario.destinoId().touched()) {
+          @for (e of formulario.destinoId().errors(); track e.kind) {
+            <p class="error-campo" role="alert">{{ e.message }}</p>
+          }
+        }
+      } @else {
+        <p class="mensaje-error" role="alert">
+          La etapa {{ linea.estadoActual?.nombre }} no tiene etapas siguientes configuradas. Avise
+          al coordinador.
+        </p>
+      }
+    </fieldset>
+
+    <mat-form-field appearance="outline" class="cantidad">
+      <mat-label>Piezas procesadas en esta etapa</mat-label>
+      <input matInput type="number" inputmode="numeric" [formField]="formulario.cantidad" />
+      <mat-hint>
+        De 0 a {{ limite }}
+        {{
+          limitadaPorEtapaAnterior ? '(reportadas por la etapa anterior)' : '(cantidad del pedido)'
+        }}
+      </mat-hint>
+      @for (e of formulario.cantidad().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (limite < solicitada) {
+      <p class="nota">
+        La etapa anterior reportó {{ limite }} de {{ solicitada }} piezas. Si llegaron más, pida a
+        un supervisor que corrija la cantidad antes de reportar.
+      </p>
+    }
+
+    <mat-form-field appearance="outline" class="observaciones">
+      <mat-label>Observaciones (opcional)</mat-label>
+      <textarea matInput rows="2" [formField]="formulario.observaciones"></textarea>
+      <mat-hint align="end">{{ datos().observaciones.length }}/500</mat-hint>
+      @for (e of formulario.observaciones().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button
+      matButton="filled"
+      type="submit"
+      [disabled]="formulario().submitting() || !destinos.value()?.length"
+    >
+      Guardar
+    </button>
+  </mat-dialog-actions>
+</form>

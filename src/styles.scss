@@ -1,0 +1,57 @@
+@use '@angular/cdk';
+@use '@angular/material' as mat;
+
+// Clase cdk-visually-hidden: textos solo para lectores de pantalla
+@include cdk.a11y-visually-hidden();
+
+// Tema de Angular Material 3. Paleta neutra provisional: al tener el manual de marca de PlastInnova
+// solo se cambian `primary` y `tertiary` aquí (o se genera una paleta propia con `ng generate @angular/material:theme-color`).
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+
+// Íconos autohospedados (material-symbols): las tablets de planta pueden no tener internet
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+// Botones de alternar (etapas, destinos) con altura táctil cómoda para la tablet
+html {
+  @include mat.button-toggle-overrides(
+    (
+      height: 56px,
+    )
+  );
+}
+
+// Formularios de escritorio (filtros de coordinación): controles más bajos. No usar en pantallas de tablet.
+.compacto {
+  @include mat.theme(
+    (
+      density: -3,
+    )
+  );
+}

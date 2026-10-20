@@ -1,0 +1,144 @@
+.cabecera {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+}
+
+.total {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// Con la clase global .compacto los filtros caben en dos filas cortas
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.numero {
+  width: 160px;
+}
+
+.ciudad {
+  width: 160px;
+}
+
+.vendedores {
+  width: 220px;
+
+  .mas {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.estados {
+  width: 190px;
+}
+
+.fecha {
+  width: 152px;
+}
+
+.interruptores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.estado-carga {
+  min-height: 4px;
+  margin: 8px 0;
+}
+
+.tabla {
+  overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+table {
+  width: 100%;
+}
+
+td.mat-mdc-cell {
+  padding-block: 8px;
+}
+
+.enlace {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-primary);
+}
+
+.principal,
+.secundario {
+  display: block;
+}
+
+.secundario {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.avance .secundario {
+  display: inline;
+}
+
+.avance {
+  min-width: 180px;
+
+  mat-progress-bar {
+    margin-top: 6px;
+  }
+}
+
+.alerta {
+  color: var(--mat-sys-error);
+  font-weight: 500;
+  white-space: nowrap;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    vertical-align: text-bottom;
+  }
+}
+
+tr.atrasado td:first-child {
+  box-shadow: inset 4px 0 0 var(--mat-sys-error);
+}
+
+.vacio {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+mat-paginator {
+  background: transparent;
+}
+
+.mensaje-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}

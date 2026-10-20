@@ -1,0 +1,74 @@
+<h2 mat-dialog-title>Historial · Pedido {{ linea.numeroPedido }}, pos. {{ linea.posicion }}</h2>
+<mat-dialog-content>
+  <p class="producto">{{ linea.productoSku }} {{ linea.productoNombre }}</p>
+
+  @if (historial.isLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Cargando el historial" />
+  } @else if (error(); as mensaje) {
+    <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    <button matButton type="button" (click)="historial.reload()">Reintentar</button>
+  } @else {
+    <ol class="cambios">
+      @for (cambio of historial.value(); track cambio.id) {
+        <li class="cambio" [class.correccion]="cambio.tipo !== 'CAMBIO_ESTADO'">
+          <div class="estados">
+            @if (cambio.tipo === 'NO_SALE' || cambio.tipo === 'DEVOLUCION') {
+              <mat-icon aria-hidden="true">{{
+                cambio.tipo === 'NO_SALE' ? 'block' : 'undo'
+              }}</mat-icon>
+              <strong>{{ cambio.tipo === 'NO_SALE' ? 'No sale desde' : 'Devuelta a' }}</strong>
+              <pi-estado-chip
+                [estado]="cambio.tipo === 'NO_SALE' ? cambio.estadoAnterior : cambio.estado"
+              />
+            } @else if (cambio.tipo === 'CORRECCION_CANTIDAD') {
+              <mat-icon aria-hidden="true">edit_note</mat-icon>
+              <strong>Corrección de piezas en</strong>
+              <pi-estado-chip [estado]="cambio.estado" />
+            } @else {
+              @if (cambio.estadoAnterior) {
+                <pi-estado-chip [estado]="cambio.estadoAnterior" />
+                <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+                <span class="cdk-visually-hidden">pasó a</span>
+              }
+              <pi-estado-chip [estado]="cambio.estado" />
+            }
+          </div>
+          <p class="detalle">
+            <time [attr.datetime]="cambio.fechaCambio">
+              {{ cambio.fechaCambio | utc | date: 'EEE d MMM y, h:mm a' }}
+            </time>
+            ·
+            @if (cambio.origen === 'SYNC') {
+              Sincronización con FileMaker
+            } @else {
+              {{ cambio.usuarioNombre ?? cambio.usuarioEmail }}
+            }
+            @if (cambio.tipo === 'CORRECCION_CANTIDAD') {
+              · de {{ cambio.cantidadAnterior | number }} a
+              {{ cambio.cantidadProcesada | number }} piezas
+            } @else if (
+              cambio.tipo === 'CAMBIO_ESTADO' &&
+              cambio.cantidadProcesada !== undefined &&
+              cambio.cantidadProcesada !== null
+            ) {
+              · {{ cambio.cantidadProcesada | number }} piezas
+            }
+          </p>
+          @if (cambio.observaciones) {
+            <p class="observaciones">
+              @if (cambio.tipo !== 'CAMBIO_ESTADO') {
+                <span class="etiqueta">Justificación:</span>
+              }
+              “{{ cambio.observaciones }}”
+            </p>
+          }
+        </li>
+      } @empty {
+        <li class="vacio">La línea no tiene cambios de estado registrados.</li>
+      }
+    </ol>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button matButton="filled" type="button" mat-dialog-close cdkFocusInitial>Cerrar</button>
+</mat-dialog-actions>

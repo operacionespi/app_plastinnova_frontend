@@ -1,0 +1,50 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resumen {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font: var(--mat-sys-body-large);
+
+  strong {
+    font: var(--mat-sys-title-medium);
+  }
+}
+
+.estado-actual {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.ayuda {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.campo {
+  width: 100%;
+}
+
+input[type='number'] {
+  font: var(--mat-sys-headline-small);
+}
+
+mat-dialog-actions button {
+  min-height: 48px;
+  padding-inline: 24px;
+}
+
+.mensaje-error {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}

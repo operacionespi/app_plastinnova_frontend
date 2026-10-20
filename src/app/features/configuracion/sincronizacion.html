@@ -1,0 +1,140 @@
+<div class="cabecera">
+  <h1>Sincronización con FileMaker</h1>
+  <span class="espacio"></span>
+  <button
+    matButton="filled"
+    type="button"
+    [disabled]="!!enCurso() || iniciando()"
+    (click)="ejecutar('INCREMENTAL')"
+  >
+    <mat-icon>sync</mat-icon>
+    Sincronizar ahora
+  </button>
+  <button
+    matButton="outlined"
+    type="button"
+    [disabled]="!!enCurso() || iniciando()"
+    [matMenuTriggerFor]="otros"
+  >
+    Otros modos
+    <mat-icon iconPositionEnd>arrow_drop_down</mat-icon>
+  </button>
+  <mat-menu #otros="matMenu">
+    <button mat-menu-item type="button" (click)="ejecutar('RECONCILIACION')">
+      <mat-icon>fact_check</mat-icon>
+      <span>Reconciliar pedidos abiertos</span>
+    </button>
+    <button mat-menu-item type="button" (click)="ejecutar('COMPLETA')">
+      <mat-icon>cloud_sync</mat-icon>
+      <span>Sincronización completa</span>
+    </button>
+  </mat-menu>
+</div>
+
+<p class="ayuda">
+  <strong>Sincronizar ahora</strong> trae lo modificado en FileMaker desde la última ejecución.
+  <strong>Reconciliar</strong> relee los pedidos abiertos para detectar líneas borradas (también
+  corre cada noche). <strong>Completa</strong> vuelve a leer todo.
+</p>
+
+<div aria-live="polite">
+  @if (enCurso(); as ejecucion) {
+    <div class="en-curso" role="status">
+      <span>
+        Sincronización {{ nombreModo[ejecucion.modo ?? 'INCREMENTAL'].toLowerCase() }} en curso
+        desde las {{ ejecucion.fechaInicio | utc | date: 'h:mm a' }}…
+      </span>
+      <mat-progress-bar mode="indeterminate" aria-label="Sincronización en curso" />
+    </div>
+  }
+</div>
+
+@if (error(); as mensaje) {
+  <div class="mensaje-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button matButton type="button" (click)="ejecuciones.reload()">Reintentar</button>
+  </div>
+} @else if (ejecuciones.hasValue()) {
+  @let pagina = ejecuciones.value();
+  <div class="tabla">
+    <table
+      mat-table
+      [dataSource]="pagina.content ?? []"
+      aria-label="Ejecuciones de la sincronización"
+    >
+      <ng-container matColumnDef="fechaInicio">
+        <th mat-header-cell *matHeaderCellDef>Inicio</th>
+        <td mat-cell *matCellDef="let e">{{ e.fechaInicio | utc | date: 'EEE d MMM, h:mm a' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="modo">
+        <th mat-header-cell *matHeaderCellDef>Modo</th>
+        <td mat-cell *matCellDef="let e">{{ textoModo(e) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Resultado</th>
+        <td mat-cell *matCellDef="let e">
+          <span [class]="'resultado ' + (e.estado ?? '')">
+            {{ textoResultado(e) }}
+          </span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="duracion">
+        <th mat-header-cell *matHeaderCellDef>Duración</th>
+        <td mat-cell *matCellDef="let e">{{ duracion(e.fechaInicio, e.fechaFin) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="leidos">
+        <th mat-header-cell *matHeaderCellDef class="numero">Leídos</th>
+        <td mat-cell *matCellDef="let e" class="numero">{{ e.registrosLeidos | number }}</td>
+      </ng-container>
+      <ng-container matColumnDef="cambios">
+        <th mat-header-cell *matHeaderCellDef class="numero">Nuevos / act. / elim.</th>
+        <td mat-cell *matCellDef="let e" class="numero">
+          {{ e.registrosInsertados | number }} / {{ e.registrosActualizados | number }} /
+          {{ e.registrosEliminados | number }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="omitidos">
+        <th mat-header-cell *matHeaderCellDef class="numero">Omitidos / errores</th>
+        <td mat-cell *matCellDef="let e" class="numero" [class.alerta]="e.registrosConError > 0">
+          {{ e.registrosOmitidos | number }} / {{ e.registrosConError | number }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="disparadoPor">
+        <th mat-header-cell *matHeaderCellDef>Origen</th>
+        <td mat-cell *matCellDef="let e">{{ e.disparadoPor ?? 'Programada' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="detalle">
+        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Detalle</span></th>
+        <td mat-cell *matCellDef="let e">
+          @if (e.avisos || e.mensajeError) {
+            <button
+              matButton
+              type="button"
+              [attr.aria-label]="'Ver avisos de la ejecución ' + e.id"
+              (click)="verDetalle(e)"
+            >
+              Ver avisos
+            </button>
+          }
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let fila; columns: columnas"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="vacio" [attr.colspan]="columnas.length">Aún no hay ejecuciones.</td>
+      </tr>
+    </table>
+  </div>
+  @if (total() > (pagina.page?.size ?? 0)) {
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="pagina.page?.number ?? 0"
+      [pageSize]="pagina.page?.size ?? 20"
+      [hidePageSize]="true"
+      aria-label="Páginas de la bitácora"
+      (page)="cambiarPagina($event)"
+    />
+  }
+} @else {
+  <mat-progress-bar mode="indeterminate" aria-label="Cargando la bitácora" />
+}

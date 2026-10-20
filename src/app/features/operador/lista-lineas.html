@@ -1,0 +1,47 @@
+<div class="estado-carga" aria-live="polite">
+  @if (lineas.isLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Cargando líneas" />
+  } @else if (lineas.hasValue()) {
+    <span class="cdk-visually-hidden">{{ total() }} líneas encontradas</span>
+  }
+</div>
+
+@if (error(); as mensaje) {
+  <div class="mensaje-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button matButton type="button" (click)="recargar()">Reintentar</button>
+  </div>
+} @else if (lineas.hasValue()) {
+  @let pagina = lineas.value();
+  @if (pagina.content?.length) {
+    <ul class="lineas">
+      @for (linea of pagina.content; track linea.id) {
+        <li>
+          <pi-tarjeta-linea
+            [linea]="linea"
+            [puedeReportar]="puedeReportar"
+            [puedeCorregir]="puedeCorregir"
+            [puedeMarcarNoSale]="puedeMarcarNoSale"
+            (reportar)="reportar($event)"
+            (corregir)="corregir($event)"
+            (noSale)="marcarNoSale($event)"
+            (historial)="verHistorial($event)"
+          />
+        </li>
+      }
+    </ul>
+    @if (total() > pagina.content!.length) {
+      <mat-paginator
+        [length]="total()"
+        [pageIndex]="pagina.page?.number ?? 0"
+        [pageSize]="pagina.page?.size ?? 20"
+        [hidePageSize]="true"
+        [showFirstLastButtons]="true"
+        aria-label="Páginas de líneas"
+        (page)="cambiarPagina($event)"
+      />
+    }
+  } @else {
+    <p class="vacio">{{ mensajeVacio() }}</p>
+  }
+}

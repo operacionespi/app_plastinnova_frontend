@@ -1,0 +1,228 @@
+<div class="cabecera">
+  <h1>Pedidos</h1>
+  @if (pedidos.hasValue()) {
+    <span class="total" aria-live="polite">{{ total() | number }} pedidos</span>
+  }
+</div>
+
+<form
+  class="filtros compacto"
+  role="search"
+  aria-label="Filtros de pedidos"
+  (submit)="aplicar($event)"
+  novalidate
+>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="numero">
+    <mat-label>Número de pedido</mat-label>
+    <input
+      matInput
+      type="search"
+      autocomplete="off"
+      placeholder="Inicio del número"
+      [formField]="formulario.numero"
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ciudad">
+    <mat-label>Ciudad</mat-label>
+    <input
+      matInput
+      type="search"
+      autocomplete="off"
+      placeholder="Parte del nombre"
+      [formField]="formulario.ciudad"
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="vendedores">
+    <mat-label>Vendedores</mat-label>
+    <mat-select multiple [formField]="formulario.vendedores" (closed)="aplicar()">
+      <mat-select-trigger>
+        {{ datos().vendedores[0] }}
+        @if (datos().vendedores.length > 1) {
+          <span class="mas">(+{{ datos().vendedores.length - 1 }})</span>
+        }
+      </mat-select-trigger>
+      @for (vendedor of opcionesVendedor(); track vendedor) {
+        <mat-option [value]="vendedor">{{ vendedor }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="estados">
+    <mat-label>Estados</mat-label>
+    <mat-select multiple [formField]="formulario.estadosIds" (closed)="aplicar()">
+      @for (estado of catalogo.value(); track estado.id) {
+        <mat-option [value]="estado.id">
+          {{ estado.nombre }}{{ estado.activo === false ? ' (inactivo)' : '' }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="fecha">
+    <mat-label>Creado desde</mat-label>
+    <input matInput type="date" [formField]="formulario.desde" (change)="aplicar()" />
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="fecha">
+    <mat-label>Creado hasta</mat-label>
+    <input matInput type="date" [formField]="formulario.hasta" (change)="aplicar()" />
+  </mat-form-field>
+
+  <div class="interruptores">
+    <mat-slide-toggle [formField]="formulario.soloAbiertos" (change)="aplicar()">
+      Solo abiertos
+    </mat-slide-toggle>
+    <mat-slide-toggle [formField]="formulario.soloAtrasados" (change)="aplicar()">
+      Solo atrasados
+    </mat-slide-toggle>
+  </div>
+
+  <div class="acciones">
+    <button matButton="filled" type="submit">
+      <mat-icon>search</mat-icon>
+      Buscar
+    </button>
+    @if (hayFiltros()) {
+      <button matButton type="button" (click)="limpiar()">Quitar filtros</button>
+    }
+  </div>
+</form>
+
+<div class="estado-carga">
+  @if (pedidos.isLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Cargando pedidos" />
+  }
+</div>
+
+@if (error(); as mensaje) {
+  <div class="mensaje-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button matButton type="button" (click)="pedidos.reload()">Reintentar</button>
+  </div>
+} @else if (pedidos.hasValue()) {
+  @let pagina = pedidos.value();
+  <div class="tabla">
+    <table
+      mat-table
+      [dataSource]="pagina.content ?? []"
+      matSort
+      [matSortActive]="ordenActual()?.campo ?? ''"
+      [matSortDirection]="ordenActual()?.direccion ?? ''"
+      (matSortChange)="ordenar($event)"
+      aria-label="Pedidos"
+    >
+      <ng-container matColumnDef="numeroPedido">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          sortActionDescription="Ordenar por número"
+        >
+          Pedido
+        </th>
+        <td mat-cell *matCellDef="let p">
+          <a class="enlace" [routerLink]="['/pedidos', p.id]">{{ p.numeroPedido }}</a>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cliente">
+        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <td mat-cell *matCellDef="let p">
+          <span class="principal">{{ p.clienteRazonSocial }}</span>
+          @if (p.vendedor) {
+            <span class="secundario">{{ p.vendedor }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="ubicacion">
+        <th mat-header-cell *matHeaderCellDef>Ciudad</th>
+        <td mat-cell *matCellDef="let p">
+          @if (p.ciudad) {
+            <span class="principal">{{ p.ciudad }}</span>
+            <span class="secundario">{{ p.pais }}</span>
+          } @else {
+            <span class="secundario">Sin ubicación</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let p"><pi-estado-chip [estado]="p.estadoActual" /></td>
+      </ng-container>
+
+      <ng-container matColumnDef="fechaCreacionFm">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          sortActionDescription="Ordenar por fecha de creación"
+        >
+          Creado
+        </th>
+        <td mat-cell *matCellDef="let p">{{ p.fechaCreacionFm | utc | date: 'd MMM y' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="fechaEstimadaEntrega">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          sortActionDescription="Ordenar por fecha de entrega"
+        >
+          Entrega
+        </th>
+        <td mat-cell *matCellDef="let p" [class.alerta]="p.atrasado">
+          @if (p.fechaEstimadaEntrega) {
+            @if (p.atrasado) {
+              <mat-icon aria-hidden="true">warning</mat-icon>
+              <span class="cdk-visually-hidden">Atrasado:</span>
+            }
+            {{ p.fechaEstimadaEntrega | dia | date: 'd MMM y' }}
+          } @else if (p.fechaCierre) {
+            <span class="secundario">Cerrado {{ p.fechaCierre | utc | date: 'd MMM' }}</span>
+          } @else {
+            <span class="secundario">Sin fecha</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="avance">
+        <th mat-header-cell *matHeaderCellDef>Avance</th>
+        <td mat-cell *matCellDef="let p" class="avance">
+          <span>
+            {{ p.piezasProcesadas | number }} / {{ p.piezasSolicitadas | number }} piezas
+            <span class="secundario"
+              >· {{ p.lineas }} {{ p.lineas === 1 ? 'línea' : 'líneas' }}</span
+            >
+          </span>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="porcentaje(p.piezasProcesadas, p.piezasSolicitadas)"
+            [attr.aria-label]="'Avance del pedido ' + p.numeroPedido"
+          />
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas; sticky: true"></tr>
+      <tr mat-row *matRowDef="let fila; columns: columnas" [class.atrasado]="fila.atrasado"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="vacio" [attr.colspan]="columnas.length">No hay pedidos con estos filtros.</td>
+      </tr>
+    </table>
+  </div>
+
+  @if (total() > (pagina.page?.size ?? 0)) {
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="pagina.page?.number ?? 0"
+      [pageSize]="pagina.page?.size ?? 25"
+      [hidePageSize]="true"
+      [showFirstLastButtons]="true"
+      aria-label="Páginas de pedidos"
+      (page)="cambiarPagina($event)"
+    />
+  }
+}

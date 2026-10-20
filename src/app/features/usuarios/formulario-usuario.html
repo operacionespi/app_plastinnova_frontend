@@ -1,0 +1,71 @@
+<h2 mat-dialog-title>{{ edicion ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+<form (submit)="guardar($event)" novalidate>
+  <mat-dialog-content>
+    @if (error(); as mensaje) {
+      <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    }
+
+    @if (edicion) {
+      <p class="correo">
+        <span class="etiqueta">Correo</span>
+        {{ entrada.usuario?.email }}
+        <span class="nota">No cambia: es con el que ingresa.</span>
+      </p>
+    } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Correo</mat-label>
+        <input matInput type="email" autocomplete="off" [formField]="formulario.email" />
+        <mat-hint>Con este correo ingresará.</mat-hint>
+        @for (e of formulario.email().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre completo</mat-label>
+      <input matInput autocomplete="off" [formField]="formulario.nombreCompleto" />
+      @for (e of formulario.nombreCompleto().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <fieldset class="roles" aria-describedby="error-roles">
+      <legend>Roles</legend>
+      @for (rol of entrada.roles; track rol.codigo) {
+        <mat-checkbox
+          [checked]="tieneRol(rol.codigo ?? '')"
+          [disabled]="bloqueado(rol.codigo ?? '')"
+          (change)="alternarRol(rol.codigo ?? '', $event.checked)"
+        >
+          <span class="rol">{{ nombreRol(rol.codigo ?? '') }}</span>
+          <span class="descripcion">{{ rol.descripcion }}</span>
+        </mat-checkbox>
+      }
+      <p id="error-roles" class="error-campo" aria-live="polite">
+        @if (formulario.roles().touched()) {
+          @for (e of formulario.roles().errors(); track e.kind) {
+            {{ e.message }}
+          }
+        }
+      </p>
+      @if (entrada.esPropio) {
+        <p class="nota">No puede quitarse su propio rol de Administrador.</p>
+      }
+    </fieldset>
+
+    @if (!edicion) {
+      <p class="nota">
+        El sistema genera una contraseña temporal y se la mostrará al guardar. El usuario deberá
+        cambiarla al ingresar.
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="formulario().submitting()">
+      {{ edicion ? 'Guardar' : 'Crear usuario' }}
+    </button>
+  </mat-dialog-actions>
+</form>

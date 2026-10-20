@@ -1,0 +1,130 @@
+<div class="cabecera">
+  <h1>Usuarios</h1>
+  <button matButton="filled" type="button" (click)="nuevo()" [disabled]="!roles.hasValue()">
+    <mat-icon>person_add</mat-icon>
+    Nuevo usuario
+  </button>
+</div>
+
+<div class="filtros" role="search" aria-label="Buscar usuarios">
+  <mat-form-field appearance="outline" class="buscar" subscriptSizing="dynamic">
+    <mat-label>Buscar por nombre o correo</mat-label>
+    <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+    <input
+      matInput
+      type="search"
+      autocomplete="off"
+      [value]="texto()"
+      (input)="texto.set($any($event.target).value)"
+    />
+  </mat-form-field>
+  <mat-slide-toggle [checked]="incluirInactivos()" (change)="incluirInactivos.set($event.checked)">
+    Mostrar inactivos ({{ inactivos() }})
+  </mat-slide-toggle>
+</div>
+
+<div class="estado-carga">
+  @if (usuarios.isLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Cargando usuarios" />
+  }
+</div>
+
+@if (error(); as mensaje) {
+  <div class="mensaje-error" role="alert">
+    <span>{{ mensaje }}</span>
+    <button matButton type="button" (click)="usuarios.reload(); roles.reload()">Reintentar</button>
+  </div>
+} @else if (usuarios.hasValue()) {
+  <div class="tabla">
+    <table mat-table [dataSource]="visibles()" aria-label="Usuarios">
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+        <td mat-cell *matCellDef="let u">
+          <span class="principal">
+            {{ u.nombreCompleto }}
+            @if (esPropio(u)) {
+              <span class="tu">(usted)</span>
+            }
+          </span>
+          <span class="secundario">{{ u.email }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="roles">
+        <th mat-header-cell *matHeaderCellDef>Roles</th>
+        <td mat-cell *matCellDef="let u">
+          <ul class="roles">
+            @for (r of u.roles; track r) {
+              <li>{{ nombreRol(r) }}</li>
+            }
+          </ul>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let u">
+          @if (!u.activo) {
+            <span class="etiqueta inactivo">Inactivo</span>
+          } @else if (u.debeCambiarContrasena) {
+            <span class="etiqueta temporal">Contraseña temporal</span>
+          } @else {
+            <span class="etiqueta activo">Activo</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="creado">
+        <th mat-header-cell *matHeaderCellDef>Creado</th>
+        <td mat-cell *matCellDef="let u">{{ u.fechaCreacion | utc | date: 'd MMM y' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Acciones</span></th>
+        <td mat-cell *matCellDef="let u" class="acciones">
+          <button
+            matIconButton
+            type="button"
+            [matMenuTriggerFor]="menu"
+            [attr.aria-label]="'Acciones de ' + u.nombreCompleto"
+          >
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item type="button" (click)="editar(u)" [disabled]="!roles.hasValue()">
+              <mat-icon>edit</mat-icon>
+              Editar nombre y roles
+            </button>
+            @if (!esPropio(u)) {
+              @if (u.activo) {
+                <button mat-menu-item type="button" (click)="restablecer(u)">
+                  <mat-icon>lock_reset</mat-icon>
+                  Restablecer contraseña
+                </button>
+                <button mat-menu-item type="button" (click)="desactivar(u)">
+                  <mat-icon>person_off</mat-icon>
+                  Desactivar
+                </button>
+              } @else {
+                <button mat-menu-item type="button" (click)="activar(u)">
+                  <mat-icon>person_check</mat-icon>
+                  Activar
+                </button>
+              }
+            }
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let fila; columns: columnas" [class.inactiva]="!fila.activo"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="vacio" [attr.colspan]="columnas.length">No hay usuarios con esta búsqueda.</td>
+      </tr>
+    </table>
+  </div>
+  <p class="nota">
+    Los usuarios no se eliminan porque aparecen en el historial de pedidos y líneas: se desactivan.
+    Su propia contraseña se cambia en "Cambiar contraseña" del menú de su cuenta.
+  </p>
+}

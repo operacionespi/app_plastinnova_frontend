@@ -1,0 +1,73 @@
+<h2 mat-dialog-title>{{ nuevo ? 'Nuevo estado' : 'Editar ' + datosDialogo.estado?.nombre }}</h2>
+<form (submit)="guardar($event)" novalidate>
+  <mat-dialog-content>
+    @if (error(); as mensaje) {
+      <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    }
+
+    <div class="fila">
+      <mat-form-field appearance="outline" class="crece">
+        <mat-label>Nombre</mat-label>
+        <input matInput [formField]="formulario.nombre" (input)="cambioNombre()" />
+        @for (e of formulario.nombre().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="crece">
+        <mat-label>Código</mat-label>
+        <input matInput [formField]="formulario.codigo" (input)="cambioCodigo()" />
+        <mat-hint>La sincronización lo compara con los estados de FileMaker</mat-hint>
+        @for (e of formulario.codigo().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="ancho">
+      <mat-label>Descripción (opcional)</mat-label>
+      <input matInput [formField]="formulario.descripcion" />
+      @for (e of formulario.descripcion().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="fila">
+      <mat-form-field appearance="outline" class="orden">
+        <mat-label>Orden</mat-label>
+        <input matInput type="number" inputmode="numeric" [formField]="formulario.ordenLogico" />
+        <mat-hint>Posición en el proceso</mat-hint>
+        @for (e of formulario.ordenLogico().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="color">
+        <mat-label>Color</mat-label>
+        <input matInput [formField]="formulario.color" />
+        <input
+          matSuffix
+          type="color"
+          class="selector-color"
+          aria-label="Elegir color"
+          [value]="datos().color"
+          (input)="datos.update((d) => ({ ...d, color: $any($event.target).value.toUpperCase() }))"
+        />
+        @for (e of formulario.color().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <mat-checkbox [formField]="formulario.esInicial">
+      Estado inicial (con el que llegan los nuevos; el anterior deja de serlo)
+    </mat-checkbox>
+    <mat-checkbox [formField]="formulario.esFinal">
+      Estado final (cierra el
+      {{ datosDialogo.tipo === 'pedido' ? 'pedido' : 'avance de la línea' }})
+    </mat-checkbox>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="formulario().submitting()">Guardar</button>
+  </mat-dialog-actions>
+</form>

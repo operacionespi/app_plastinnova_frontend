@@ -1,0 +1,80 @@
+@let l = linea();
+<article class="tarjeta" [class.atrasada]="l.atrasado" [attr.aria-labelledby]="idTitulo()">
+  <header class="encabezado">
+    <h2 class="titulo" [id]="idTitulo()">
+      Pedido {{ l.numeroPedido }}
+      <span class="posicion">· Pos. {{ l.posicion }}</span>
+    </h2>
+    <pi-estado-chip [estado]="l.estadoActual" />
+  </header>
+
+  <p class="cliente">{{ l.clienteRazonSocial }}</p>
+  <p class="producto">
+    <span class="sku">{{ l.productoSku }}</span>
+    {{ l.productoNombre }}
+  </p>
+
+  <div class="avance">
+    <span>
+      Procesadas <strong>{{ l.cantidadProcesada ?? 0 | number }}</strong> de
+      {{ l.cantidadSolicitada ?? 0 | number }}
+    </span>
+    <mat-progress-bar
+      mode="determinate"
+      [value]="porcentaje()"
+      [attr.aria-label]="'Avance de la línea ' + l.posicion + ' del pedido ' + l.numeroPedido"
+    />
+  </div>
+
+  <ul class="etiquetas" aria-label="Características">
+    <li>
+      <mat-icon aria-hidden="true">{{
+        l.tipoAlistamiento === 'INTERNACIONAL' ? 'public' : 'home_pin'
+      }}</mat-icon>
+      {{ l.tipoAlistamiento === 'INTERNACIONAL' ? 'Internacional' : 'Nacional' }}
+    </li>
+    @if (l.esAnexo) {
+      <li class="anexo">
+        <mat-icon aria-hidden="true">attach_file</mat-icon>
+        Anexo
+      </li>
+    }
+    @if (l.fechaEstimadaEntrega) {
+      <li [class.alerta]="l.atrasado">
+        <mat-icon aria-hidden="true">{{ l.atrasado ? 'warning' : 'event' }}</mat-icon>
+        {{ l.atrasado ? 'Atrasado · entrega' : 'Entrega' }}
+        {{ l.fechaEstimadaEntrega | dia | date: 'EEE d MMM' }}
+      </li>
+    } @else {
+      <li class="tenue">
+        <mat-icon aria-hidden="true">event_busy</mat-icon>
+        Sin fecha de entrega
+      </li>
+    }
+  </ul>
+
+  <footer class="acciones">
+    <button matButton="outlined" type="button" (click)="historial.emit(l)">
+      <mat-icon>history</mat-icon>
+      Historial
+    </button>
+    @if (puedeCorregir() && l.avanceReportado) {
+      <button matButton="outlined" type="button" (click)="corregir.emit(l)">
+        <mat-icon>edit_note</mat-icon>
+        Corregir piezas
+      </button>
+    }
+    @if (puedeMarcarNoSale()) {
+      <button matButton="outlined" type="button" (click)="noSale.emit(l)">
+        <mat-icon>block</mat-icon>
+        No sale
+      </button>
+    }
+    @if (puedeReportar()) {
+      <button matButton="filled" type="button" (click)="reportar.emit(l)">
+        <mat-icon>task_alt</mat-icon>
+        Reportar avance
+      </button>
+    }
+  </footer>
+</article>
