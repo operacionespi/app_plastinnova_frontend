@@ -14,9 +14,11 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
+import { KpiPedidosPorEstadoDto } from '../../api/models/kpi-pedidos-por-estado-dto';
 import { estadosPedidoListar } from '../../api/fn/catalogo-estados-de-pedido/estados-pedido-listar';
 import { dashboardVendedores } from '../../api/fn/tablero-e-indicadores/dashboard-vendedores';
 import { dashboardBuscarPedidos } from '../../api/fn/tablero-e-indicadores/dashboard-buscar-pedidos';
+import { dashboardContarPedidosPorEstado } from '../../api/fn/tablero-e-indicadores/dashboard-contar-pedidos-por-estado';
 import { MANEJA_ERRORES } from '../../core/http/contexto';
 import { leerProblema } from '../../core/http/problema';
 import { EstadoChip } from '../../core/ui/estado-chip';
@@ -30,6 +32,7 @@ import {
   leerOrden,
   leerPagina,
 } from './filtros-pedidos';
+import { TarjetasEstado } from './tarjetas-estado';
 import { UltimoListado } from './ultimo-listado';
 
 export const PEDIDOS_POR_PAGINA = 25;
@@ -54,6 +57,7 @@ export const PEDIDOS_POR_PAGINA = 25;
     MatSortModule,
     MatTableModule,
     RouterLink,
+    TarjetasEstado,
     UtcPipe,
   ],
   templateUrl: './listado-pedidos.html',
@@ -128,6 +132,29 @@ export class ListadoPedidos {
         new HttpContext().set(MANEJA_ERRORES, true),
       ),
   });
+  /** Los demás filtros, comparados por contenido: cambiar de estado no vuelve a consultar el conteo. */
+  private readonly filtroConteo = computed(
+    () => aFiltroApi({ ...this.filtros(), estadosIds: [] }),
+    { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
+  );
+  protected readonly conteos = resource({
+    params: () => this.filtroConteo(),
+    loader: ({ params }) =>
+      this.api.invoke(
+        dashboardContarPedidosPorEstado,
+        { body: params },
+        new HttpContext().set(MANEJA_ERRORES, true),
+      ),
+  });
+  /** Mientras llega el conteo nuevo se mantiene el anterior para que las tarjetas no parpadeen. */
+  protected readonly ultimoConteo = linkedSignal<
+    KpiPedidosPorEstadoDto[] | undefined,
+    KpiPedidosPorEstadoDto[] | undefined
+  >({
+    source: () => (this.conteos.error() ? [] : this.conteos.value()),
+    computation: (conteo, anterior) => conteo ?? anterior?.value,
+  });
+
   protected readonly error = computed(() =>
     this.pedidos.error() ? leerProblema(this.pedidos.error()).mensaje : null,
   );
@@ -173,6 +200,18 @@ export class ListadoPedidos {
 
   protected limpiar(): void {
     this.navegar(aParametros(leerFiltros({}), this.ordenActual()));
+  }
+
+  protected alternarEstado(estadoId: number): void {
+    const actuales = this.filtros().estadosIds;
+    const estados = actuales.includes(estadoId)
+      ? actuales.filter((id) => id !== estadoId)
+      : [...actuales, estadoId];
+    this.navegar({ estados: estados.length ? estados.join(',') : null, pagina: null });
+  }
+
+  protected quitarEstados(): void {
+    this.navegar({ estados: null, pagina: null });
   }
 
   protected ordenar(orden: Sort): void {

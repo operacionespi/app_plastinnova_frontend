@@ -5,6 +5,16 @@
   }
 </div>
 
+@if (ultimoConteo()?.length) {
+  <pi-tarjetas-estado
+    class="tarjetas"
+    [conteos]="ultimoConteo()!"
+    [seleccionados]="filtros().estadosIds"
+    (alternar)="alternarEstado($event)"
+    (todos)="quitarEstados()"
+  />
+}
+
 <form
   class="filtros compacto"
   role="search"

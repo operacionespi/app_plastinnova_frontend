@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { Api } from '../../api/api';
 import { estadosPedidoListar } from '../../api/fn/catalogo-estados-de-pedido/estados-pedido-listar';
 import { dashboardBuscarPedidos } from '../../api/fn/tablero-e-indicadores/dashboard-buscar-pedidos';
+import { dashboardContarPedidosPorEstado } from '../../api/fn/tablero-e-indicadores/dashboard-contar-pedidos-por-estado';
 import { dashboardVendedores } from '../../api/fn/tablero-e-indicadores/dashboard-vendedores';
 import { ListadoPedidos } from './listado-pedidos';
 import { UltimoListado } from './ultimo-listado';
@@ -10,14 +11,23 @@ import { UltimoListado } from './ultimo-listado';
 describe('ListadoPedidos', () => {
   let fixture: ComponentFixture<ListadoPedidos>;
   let busquedas: { pageable: unknown; body: unknown }[];
+  let conteos: { body: unknown }[];
   let navegar: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     busquedas = [];
+    conteos = [];
     const api = {
       invoke: vi.fn((fn: unknown, params: { pageable: unknown; body: unknown }) => {
         if (fn === estadosPedidoListar) return Promise.resolve([{ id: 1, nombre: 'Creado' }]);
         if (fn === dashboardVendedores) return Promise.resolve(['Ana Pérez', 'Luis Gómez']);
+        if (fn === dashboardContarPedidosPorEstado) {
+          conteos.push(params);
+          return Promise.resolve([
+            { estadoId: 1, nombre: 'Creado', color: '#1565c0', pedidos: 428 },
+            { estadoId: 2, nombre: 'En alistamiento', pedidos: 0 },
+          ]);
+        }
         if (fn === dashboardBuscarPedidos) {
           busquedas.push(params);
           return Promise.resolve({
@@ -120,6 +130,45 @@ describe('ListadoPedidos', () => {
     await fixture.whenStable();
     const opciones = [...document.querySelectorAll('mat-option')].map((o) => o.textContent?.trim());
     expect(opciones).toEqual(['Marta Ruiz', 'Ana Pérez', 'Luis Gómez']);
+  });
+
+  it('muestra una tarjeta por estado con los demás filtros y la del estado elegido marcada', () => {
+    expect(conteos.at(-1)?.body).toMatchObject({ estadosIds: undefined, soloAtrasados: true });
+    const tarjetas = [
+      ...fixture.nativeElement.querySelectorAll('pi-tarjetas-estado button'),
+    ] as HTMLButtonElement[];
+    expect(
+      tarjetas.map((t) => [...t.querySelectorAll('span')].map((s) => s.textContent).join(' ')),
+    ).toEqual(['428 Todos', '428 Creado', '0 En alistamiento']);
+    expect(tarjetas.map((t) => t.getAttribute('aria-pressed'))).toEqual(['false', 'true', 'false']);
+  });
+
+  it('una tarjeta agrega o quita su estado del filtro y "Todos" lo quita', () => {
+    const tarjetas = fixture.nativeElement.querySelectorAll(
+      'pi-tarjetas-estado button',
+    ) as NodeListOf<HTMLButtonElement>;
+    tarjetas[2].click();
+    expect(navegar).toHaveBeenLastCalledWith([], {
+      queryParams: { estados: '1,2', pagina: null },
+      queryParamsHandling: 'merge',
+    });
+    tarjetas[1].click();
+    expect(navegar).toHaveBeenLastCalledWith([], {
+      queryParams: { estados: null, pagina: null },
+      queryParamsHandling: 'merge',
+    });
+    tarjetas[0].click();
+    expect(navegar).toHaveBeenLastCalledWith([], {
+      queryParams: { estados: null, pagina: null },
+      queryParamsHandling: 'merge',
+    });
+  });
+
+  it('cambiar el estado no vuelve a pedir el conteo', async () => {
+    const antes = conteos.length;
+    fixture.componentRef.setInput('estados', '2');
+    await fixture.whenStable();
+    expect(conteos.length).toBe(antes);
   });
 
   it('recuerda la URL del listado para volver desde el detalle', () => {

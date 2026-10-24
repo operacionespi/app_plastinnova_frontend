@@ -89,6 +89,8 @@ export type { SincronizacionEjecutar$Params as SincronizacionEjecutar$Params } f
 export { sincronizacionEjecutar as sincronizacionEjecutar } from './fn/sincronizacion-file-maker/sincronizacion-ejecutar';
 export type { SincronizacionObtener$Params as SincronizacionObtener$Params } from './fn/sincronizacion-file-maker/sincronizacion-obtener';
 export { sincronizacionObtener as sincronizacionObtener } from './fn/sincronizacion-file-maker/sincronizacion-obtener';
+export type { DashboardContarPedidosPorEstado$Params as DashboardContarPedidosPorEstado$Params } from './fn/tablero-e-indicadores/dashboard-contar-pedidos-por-estado';
+export { dashboardContarPedidosPorEstado as dashboardContarPedidosPorEstado } from './fn/tablero-e-indicadores/dashboard-contar-pedidos-por-estado';
 export type { DashboardBuscarPedidos$Params as DashboardBuscarPedidos$Params } from './fn/tablero-e-indicadores/dashboard-buscar-pedidos';
 export { dashboardBuscarPedidos as dashboardBuscarPedidos } from './fn/tablero-e-indicadores/dashboard-buscar-pedidos';
 export type { DashboardVendedores$Params as DashboardVendedores$Params } from './fn/tablero-e-indicadores/dashboard-vendedores';
