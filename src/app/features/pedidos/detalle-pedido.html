@@ -19,6 +19,12 @@
       <span class="etiqueta alerta"><mat-icon aria-hidden="true">warning</mat-icon> Atrasado</span>
     }
     <span class="espacio"></span>
+    @if (puede.verMateriales) {
+      <a matButton="outlined" [routerLink]="['/pedidos', p.id, 'materiales']">
+        <mat-icon>schema</mat-icon>
+        Materiales
+      </a>
+    }
     @if (!p.eliminadoEnFm) {
       @if (puede.fechaEntrega && !p.fechaCierre) {
         <button matButton="outlined" type="button" (click)="cambiarFechaEntrega(p)">

@@ -89,6 +89,16 @@ export type { SincronizacionEjecutar$Params as SincronizacionEjecutar$Params } f
 export { sincronizacionEjecutar as sincronizacionEjecutar } from './fn/sincronizacion-file-maker/sincronizacion-ejecutar';
 export type { SincronizacionObtener$Params as SincronizacionObtener$Params } from './fn/sincronizacion-file-maker/sincronizacion-obtener';
 export { sincronizacionObtener as sincronizacionObtener } from './fn/sincronizacion-file-maker/sincronizacion-obtener';
+export type { ListaMaterialesUltimasCargas$Params as ListaMaterialesUltimasCargas$Params } from './fn/lista-de-materiales/lista-materiales-ultimas-cargas';
+export { listaMaterialesUltimasCargas as listaMaterialesUltimasCargas } from './fn/lista-de-materiales/lista-materiales-ultimas-cargas';
+export type { ListaMaterialesCargar$Params as ListaMaterialesCargar$Params } from './fn/lista-de-materiales/lista-materiales-cargar';
+export { listaMaterialesCargar as listaMaterialesCargar } from './fn/lista-de-materiales/lista-materiales-cargar';
+export type { ListaMaterialesMaterialesPedido$Params as ListaMaterialesMaterialesPedido$Params } from './fn/lista-de-materiales/lista-materiales-materiales-pedido';
+export { listaMaterialesMaterialesPedido as listaMaterialesMaterialesPedido } from './fn/lista-de-materiales/lista-materiales-materiales-pedido';
+export type { ListaMaterialesBuscarItems$Params as ListaMaterialesBuscarItems$Params } from './fn/lista-de-materiales/lista-materiales-buscar-items';
+export { listaMaterialesBuscarItems as listaMaterialesBuscarItems } from './fn/lista-de-materiales/lista-materiales-buscar-items';
+export type { ListaMaterialesEstructura$Params as ListaMaterialesEstructura$Params } from './fn/lista-de-materiales/lista-materiales-estructura';
+export { listaMaterialesEstructura as listaMaterialesEstructura } from './fn/lista-de-materiales/lista-materiales-estructura';
 export type { DashboardContarPedidosPorEstado$Params as DashboardContarPedidosPorEstado$Params } from './fn/tablero-e-indicadores/dashboard-contar-pedidos-por-estado';
 export { dashboardContarPedidosPorEstado as dashboardContarPedidosPorEstado } from './fn/tablero-e-indicadores/dashboard-contar-pedidos-por-estado';
 export type { DashboardBuscarPedidos$Params as DashboardBuscarPedidos$Params } from './fn/tablero-e-indicadores/dashboard-buscar-pedidos';

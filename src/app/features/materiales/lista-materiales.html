@@ -1,0 +1,158 @@
+<div class="cabecera">
+  <h1>Lista de materiales</h1>
+  <span class="espacio"></span>
+  @if (puedeCargar) {
+    <button matButton="filled" type="button" (click)="cargar()">
+      <mat-icon>upload_file</mat-icon>
+      Cargar CSV
+    </button>
+  }
+</div>
+
+@if (cargas.hasValue()) {
+  @if (ultimaCarga(); as c) {
+    <div class="carga">
+      <p>
+        Cargada el {{ c.fecha | utc | date: 'd MMM y, h:mm a' }} por {{ c.usuario }}:
+        {{ c.items | number }} ítems y {{ c.relaciones | number }} relaciones.
+        @if (c.itemsSinMaestro) {
+          {{ c.itemsSinMaestro | number }} códigos no están en el maestro de ítems.
+        }
+      </p>
+      @if (c.avisos?.length) {
+        <details>
+          <summary>Ver avisos de la carga</summary>
+          <ul>
+            @for (aviso of c.avisos; track $index) {
+              <li>{{ aviso }}</li>
+            }
+          </ul>
+        </details>
+      }
+    </div>
+  } @else {
+    <p class="aviso" role="status">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      Aún no se ha cargado la lista de materiales.
+      @if (puedeCargar) {
+        Use «Cargar CSV» con los archivos exportados del ERP.
+      }
+    </p>
+  }
+}
+
+<form class="busqueda" role="search" (submit)="buscar($event)" novalidate>
+  <mat-form-field appearance="outline" class="campo">
+    <mat-label>Código o descripción</mat-label>
+    <input
+      matInput
+      type="search"
+      autocomplete="off"
+      enterkeyhint="search"
+      [formField]="formulario.texto"
+    />
+    <mat-hint>Ej. 0111/AH/MULTI, LAM/0111 o «lampara 0111»</mat-hint>
+  </mat-form-field>
+  <button matButton="filled" type="submit" class="buscar">
+    <mat-icon>search</mat-icon>
+    Buscar
+  </button>
+</form>
+
+<div class="contenido">
+  @if (buscado()) {
+    <section class="resultados" aria-labelledby="titulo-resultados">
+      <h2 id="titulo-resultados" class="cdk-visually-hidden">Resultados para {{ buscado() }}</h2>
+      @if (errorItems(); as mensaje) {
+        <div class="mensaje-error" role="alert">
+          <span>{{ mensaje }}</span>
+          <button matButton type="button" (click)="items.reload()">Reintentar</button>
+        </div>
+      } @else if (items.hasValue()) {
+        @let pagina = items.value();
+        <ul class="lista-items">
+          @for (i of pagina.content ?? []; track i.codigo) {
+            <li>
+              <button
+                type="button"
+                class="item"
+                [class.elegido]="i.codigo === codigo()"
+                [attr.aria-current]="i.codigo === codigo() ? 'true' : null"
+                (click)="elegir(i)"
+              >
+                <span class="codigo">{{ i.codigo }}</span>
+                <span class="descripcion">{{
+                  i.enMaestro ? i.descripcion || '—' : 'No está en el maestro de ítems'
+                }}</span>
+                <span class="detalle">
+                  {{ nombreTipo(i.tipo) }}
+                  @if (!i.tieneComponentes) {
+                    · sin componentes
+                  }
+                </span>
+              </button>
+            </li>
+          } @empty {
+            <li class="vacio">No hay ítems que coincidan con «{{ buscado() }}».</li>
+          }
+        </ul>
+        @if ((pagina.page?.totalElements ?? 0) > (pagina.page?.size ?? 0)) {
+          <mat-paginator
+            [length]="pagina.page?.totalElements ?? 0"
+            [pageIndex]="pagina.page?.number ?? 0"
+            [pageSize]="pagina.page?.size ?? 20"
+            [hidePageSize]="true"
+            aria-label="Páginas de resultados"
+            (page)="cambiarPagina($event)"
+          />
+        }
+      } @else {
+        <mat-progress-bar mode="indeterminate" aria-label="Buscando ítems" />
+      }
+    </section>
+  }
+
+  @if (codigo()) {
+    <section class="estructura" aria-labelledby="titulo-estructura">
+      @if (errorEstructura(); as problema) {
+        <div class="mensaje-error" role="alert">
+          <span>{{ problema.mensaje }}</span>
+          @if (problema.estado !== 404) {
+            <button matButton type="button" (click)="estructura.reload()">Reintentar</button>
+          }
+        </div>
+      } @else if (estructura.hasValue()) {
+        @let raiz = estructura.value();
+        <div class="cabecera-estructura">
+          <div>
+            <h2 id="titulo-estructura">{{ raiz.codigo }}</h2>
+            <p class="secundario">{{ raiz.descripcion }} · {{ nombreTipo(raiz.tipo) }}</p>
+          </div>
+          <span class="espacio"></span>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="cantidad">
+            <mat-label>Cantidad ({{ raiz.unidad ?? 'Und' }})</mat-label>
+            <input
+              matInput
+              type="number"
+              inputmode="decimal"
+              [formField]="formularioCantidad.cantidad"
+            />
+          </mat-form-field>
+        </div>
+        @if (raiz.componentes?.length) {
+          <pi-arbol-materiales [nodos]="raiz.componentes ?? []" />
+        } @else {
+          <p class="vacio">Este ítem no tiene componentes en la lista de materiales.</p>
+        }
+      } @else {
+        <h2 id="titulo-estructura" class="cdk-visually-hidden">Estructura de {{ codigo() }}</h2>
+        <mat-progress-bar mode="indeterminate" aria-label="Cargando la estructura" />
+      }
+    </section>
+  } @else if (!buscado()) {
+    <p class="ayuda">
+      Busque un producto terminado, semiterminado o materia prima para ver todos sus componentes y
+      las cantidades que requiere.
+    </p>
+  }
+</div>

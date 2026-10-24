@@ -51,6 +51,20 @@ export const routes: Routes = [
         data: { permiso: PERMISOS.verPedidos },
       },
       {
+        path: 'pedidos/:id/materiales',
+        title: 'Materiales del pedido',
+        loadComponent: () =>
+          import('./features/materiales/materiales-pedido').then((m) => m.MaterialesPedido),
+        data: { permiso: PERMISOS.verMateriales },
+      },
+      {
+        path: 'materiales',
+        title: 'Lista de materiales',
+        loadComponent: () =>
+          import('./features/materiales/lista-materiales').then((m) => m.ListaMateriales),
+        data: { permiso: PERMISOS.verMateriales },
+      },
+      {
         path: 'configuracion/estados',
         title: 'Estados',
         loadComponent: () =>

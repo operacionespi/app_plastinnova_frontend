@@ -4,6 +4,7 @@
 export type { CambioContrasenaRequestDto } from './models/cambio-contrasena-request-dto';
 export type { CambioEstadoDetalleRequestDto } from './models/cambio-estado-detalle-request-dto';
 export type { CambioEstadoPedidoRequestDto } from './models/cambio-estado-pedido-request-dto';
+export type { CargaListaMaterialesDto } from './models/carga-lista-materiales-dto';
 export type { ContrasenaTemporalResponseDto } from './models/contrasena-temporal-response-dto';
 export type { CorreccionCantidadRequestDto } from './models/correccion-cantidad-request-dto';
 export type { EstadoCatalogoRequestDto } from './models/estado-catalogo-request-dto';
@@ -13,6 +14,7 @@ export type { FechaEntregaRequestDto } from './models/fecha-entrega-request-dto'
 export type { FiltroLineaRequestDto } from './models/filtro-linea-request-dto';
 export type { FiltroPedidoRequestDto } from './models/filtro-pedido-request-dto';
 export type { HistorialEstadoResponseDto } from './models/historial-estado-response-dto';
+export type { ItemResumenDto } from './models/item-resumen-dto';
 export type { JustificacionRequestDto } from './models/justificacion-request-dto';
 export type { KpiLineasPorEstadoDto } from './models/kpi-lineas-por-estado-dto';
 export type { KpiPedidosPorEstadoDto } from './models/kpi-pedidos-por-estado-dto';
@@ -21,9 +23,13 @@ export type { KpiTiempoCicloDto } from './models/kpi-tiempo-ciclo-dto';
 export type { KpiTiempoEntregaDto } from './models/kpi-tiempo-entrega-dto';
 export type { KpiUbicacionDto } from './models/kpi-ubicacion-dto';
 export type { LineaColaDto } from './models/linea-cola-dto';
+export type { LineaMaterialesDto } from './models/linea-materiales-dto';
 export type { LoginRequestDto } from './models/login-request-dto';
+export type { MaterialesPedidoDto } from './models/materiales-pedido-dto';
 export type { MovimientoNoSaleResponseDto } from './models/movimiento-no-sale-response-dto';
+export type { NodoMaterialDto } from './models/nodo-material-dto';
 export type { Pageable } from './models/pageable';
+export type { PagedModelItemResumenDto } from './models/paged-model-item-resumen-dto';
 export type { PagedModelLineaColaDto } from './models/paged-model-linea-cola-dto';
 export type { PagedModelPedidoResumenDto } from './models/paged-model-pedido-resumen-dto';
 export type { PagedModelSyncLogResponseDto } from './models/paged-model-sync-log-response-dto';
@@ -36,6 +42,7 @@ export type { ResultadoEliminacionDto } from './models/resultado-eliminacion-dto
 export type { RolResponseDto } from './models/rol-response-dto';
 export type { SyncLogResponseDto } from './models/sync-log-response-dto';
 export type { TokenResponseDto } from './models/token-response-dto';
+export type { TotalMaterialDto } from './models/total-material-dto';
 export type { TransicionRequestDto } from './models/transicion-request-dto';
 export type { TransicionResponseDto } from './models/transicion-response-dto';
 export type { UsuarioActualDto } from './models/usuario-actual-dto';

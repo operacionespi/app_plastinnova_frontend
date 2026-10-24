@@ -21,6 +21,8 @@ export const PERMISOS = {
   gestionarEstados: 'estado:gestionar',
   sincronizar: 'sync:ejecutar',
   gestionarUsuarios: 'usuario:gestionar',
+  verMateriales: 'material:ver',
+  cargarMateriales: 'material:cargar',
 } as const;
 
 /** Orden del menú. Las rutas también exigen el permiso (ver app.routes.ts). */
@@ -51,6 +53,12 @@ export const OPCIONES_MENU: readonly OpcionMenu[] = [
     icono: 'monitoring',
     ruta: '/gerencia/tablero',
     permiso: PERMISOS.verIndicadores,
+  },
+  {
+    etiqueta: 'Lista de materiales',
+    icono: 'schema',
+    ruta: '/materiales',
+    permiso: PERMISOS.verMateriales,
   },
   {
     etiqueta: 'Estados',
