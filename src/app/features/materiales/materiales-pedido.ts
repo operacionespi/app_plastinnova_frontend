@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
@@ -20,7 +21,7 @@ type VistaTotales = 'todos' | 'fabricados' | 'basicos';
 
 /**
  * Semiterminados y materias primas que requiere un pedido según la lista de materiales, para la cantidad solicitada
- * de cada línea vigente. Solo informa: no reserva ni descuenta inventario.
+ * de cada línea vigente, y cuánto falta después de descontar las existencias. Solo informa: no reserva inventario.
  */
 @Component({
   selector: 'pi-materiales-pedido',
@@ -32,6 +33,7 @@ type VistaTotales = 'todos' | 'fabricados' | 'basicos';
     MatButtonToggleModule,
     MatIconModule,
     MatProgressBarModule,
+    MatSlideToggleModule,
     MatTableModule,
     RouterLink,
     UtcPipe,
@@ -59,8 +61,11 @@ export class MaterialesPedido {
   );
 
   protected readonly vista = signal<VistaTotales>('todos');
+  protected readonly soloFaltantes = signal(false);
   protected readonly totales = computed(() => {
-    const todos = this.materiales.value()?.totales ?? [];
+    const todos = (this.materiales.value()?.totales ?? []).filter(
+      (t) => !this.soloFaltantes() || (t.faltante ?? 0) > 0,
+    );
     switch (this.vista()) {
       case 'fabricados':
         return todos.filter((t) => t.tieneComponentes);
@@ -76,7 +81,15 @@ export class MaterialesPedido {
         .length,
   );
 
-  protected readonly columnas = ['codigo', 'descripcion', 'tipo', 'cantidad'];
+  protected readonly columnas = [
+    'codigo',
+    'descripcion',
+    'tipo',
+    'bodega',
+    'cantidad',
+    'disponible',
+    'faltante',
+  ];
 
   // Las filas de mat-table no tienen tipo en la plantilla
   protected textoTipo(t: TotalMaterialDto): string {

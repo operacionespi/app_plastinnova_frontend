@@ -65,6 +65,19 @@ export const routes: Routes = [
         data: { permiso: PERMISOS.verMateriales },
       },
       {
+        path: 'inventario',
+        title: 'Inventario',
+        loadComponent: () =>
+          import('./features/inventario/pagina-inventario').then((m) => m.PaginaInventario),
+        data: { permiso: PERMISOS.verInventario },
+      },
+      {
+        path: 'inventario/slots',
+        title: 'Slots',
+        loadComponent: () => import('./features/inventario/slots').then((m) => m.Slots),
+        data: { permiso: PERMISOS.gestionarInventario },
+      },
+      {
         path: 'configuracion/estados',
         title: 'Estados',
         loadComponent: () =>

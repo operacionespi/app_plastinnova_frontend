@@ -144,3 +144,12 @@ table {
   background-color: var(--mat-sys-error-container);
   color: var(--mat-sys-on-error-container);
 }
+
+.falta {
+  color: var(--mat-sys-error);
+  font-weight: 500;
+}
+
+.cubierto {
+  color: var(--mat-sys-on-surface-variant);
+}

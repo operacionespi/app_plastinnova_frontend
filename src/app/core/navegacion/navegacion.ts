@@ -23,6 +23,9 @@ export const PERMISOS = {
   gestionarUsuarios: 'usuario:gestionar',
   verMateriales: 'material:ver',
   cargarMateriales: 'material:cargar',
+  verInventario: 'inventario:ver',
+  moverInventario: 'inventario:mover',
+  gestionarInventario: 'inventario:gestionar',
 } as const;
 
 /** Orden del menú. Las rutas también exigen el permiso (ver app.routes.ts). */
@@ -59,6 +62,12 @@ export const OPCIONES_MENU: readonly OpcionMenu[] = [
     icono: 'schema',
     ruta: '/materiales',
     permiso: PERMISOS.verMateriales,
+  },
+  {
+    etiqueta: 'Inventario',
+    icono: 'inventory_2',
+    ruta: '/inventario',
+    permiso: PERMISOS.verInventario,
   },
   {
     etiqueta: 'Estados',

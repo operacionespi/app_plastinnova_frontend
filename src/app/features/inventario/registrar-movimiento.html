@@ -1,0 +1,94 @@
+<h2 mat-dialog-title>Registrar movimiento</h2>
+<form (submit)="guardar($event)" novalidate>
+  <mat-dialog-content>
+    <mat-button-toggle-group
+      class="tipos"
+      hideSingleSelectionIndicator
+      aria-label="Tipo de movimiento"
+      [value]="tipo()"
+      (change)="elegirTipo($event.value)"
+    >
+      @for (t of tipos; track t) {
+        <mat-button-toggle [value]="t">{{ nombreTipo[t] }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+
+    <mat-form-field appearance="outline" class="ancho">
+      <mat-label>Ítem</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        [formField]="formulario.itemCodigo"
+        [matAutocomplete]="items"
+      />
+      <mat-autocomplete #items="matAutocomplete">
+        @for (i of sugerencias.value()?.content ?? []; track i.codigo) {
+          <mat-option [value]="i.codigo">
+            <span class="codigo">{{ i.codigo }}</span> {{ i.descripcion }}
+          </mat-option>
+        }
+      </mat-autocomplete>
+      <mat-hint>Escriba parte del código o la descripción</mat-hint>
+      @for (e of formulario.itemCodigo().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (usaOrigen()) {
+      <pi-selector-slot
+        [etiqueta]="tipo() === 'TRASLADO' ? 'Desde' : 'Sale de'"
+        [incluirInactivos]="true"
+        [(slotId)]="origen"
+      />
+    }
+    @if (usaDestino()) {
+      <pi-selector-slot
+        [etiqueta]="
+          tipo() === 'AJUSTE' ? 'Slot contado' : tipo() === 'TRASLADO' ? 'Hacia' : 'Entra a'
+        "
+        [incluirInactivos]="tipo() === 'AJUSTE'"
+        [(slotId)]="destino"
+      />
+    }
+
+    <div class="fila">
+      <mat-form-field appearance="outline" class="cantidad">
+        <mat-label>{{ tipo() === 'AJUSTE' ? 'Cantidad contada' : 'Cantidad' }}</mat-label>
+        <input matInput type="number" inputmode="decimal" [formField]="formulario.cantidad" />
+        @if (inicial.saldo !== undefined) {
+          <mat-hint
+            >Saldo actual: {{ inicial.saldo | number: '1.0-6' }} {{ inicial.unidad }}</mat-hint
+          >
+        } @else if (tipo() === 'AJUSTE') {
+          <mat-hint>Se registra la diferencia con el saldo</mat-hint>
+        }
+        @for (e of formulario.cantidad().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="crece">
+        <mat-label>Motivo (opcional)</mat-label>
+        <input matInput [formField]="formulario.motivo" />
+        @for (e of formulario.motivo().errors(); track e.kind) {
+          <mat-error>{{ e.message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="ancho">
+      <mat-label>Observaciones (opcional)</mat-label>
+      <textarea matInput rows="2" [formField]="formulario.observaciones"></textarea>
+      @for (e of formulario.observaciones().errors(); track e.kind) {
+        <mat-error>{{ e.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (error(); as mensaje) {
+      <p class="mensaje-error" role="alert">{{ mensaje }}</p>
+    }
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit">Registrar</button>
+  </mat-dialog-actions>
+</form>

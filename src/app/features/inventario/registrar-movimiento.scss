@@ -1,0 +1,46 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tipos {
+  align-self: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+
+.crece {
+  flex: 1 1 220px;
+}
+
+.cantidad {
+  flex: 0 1 200px;
+}
+
+.ancho {
+  width: 100%;
+}
+
+.codigo {
+  font-weight: 500;
+}
+
+mat-dialog-actions button {
+  min-height: 48px;
+  padding-inline: 24px;
+}
+
+.mensaje-error {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}

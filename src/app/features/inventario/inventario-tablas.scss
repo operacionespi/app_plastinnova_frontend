@@ -1,0 +1,77 @@
+// Estilos comunes de las pestañas de existencias y movimientos
+:host {
+  display: block;
+  padding-top: 16px;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .texto {
+    flex: 1 1 260px;
+    max-width: 420px;
+  }
+
+  .bodega,
+  .tipo {
+    flex: 0 1 260px;
+  }
+
+  button {
+    min-height: 48px;
+  }
+}
+
+.tabla {
+  overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+table {
+  width: 100%;
+}
+
+.codigo {
+  display: block;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.secundario {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.ubicacion {
+  white-space: nowrap;
+}
+
+.numero {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.acciones {
+  width: 48px;
+  text-align: right;
+}
+
+.vacio {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mensaje-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
