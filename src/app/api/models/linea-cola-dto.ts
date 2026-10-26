@@ -15,6 +15,8 @@ export interface LineaColaDto {
   fechaEstimadaEntrega?: string;
   id?: number;
   numeroPedido?: string;
+  ordenProduccion?: string;
+  ordenProduccionId?: number;
   pedidoId?: number;
   posicion?: number;
   productoNombre?: string;

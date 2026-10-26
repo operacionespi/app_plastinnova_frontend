@@ -25,6 +25,12 @@
         Materiales
       </a>
     }
+    @if (puede.verEntregas) {
+      <a matButton="outlined" [routerLink]="['/pedidos', p.id, 'entregas']">
+        <mat-icon>local_shipping</mat-icon>
+        Entregas
+      </a>
+    }
     @if (!p.eliminadoEnFm) {
       @if (puede.fechaEntrega && !p.fechaCierre) {
         <button matButton="outlined" type="button" (click)="cambiarFechaEntrega(p)">

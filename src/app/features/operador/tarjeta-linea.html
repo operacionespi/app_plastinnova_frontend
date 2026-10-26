@@ -33,6 +33,12 @@
       }}</mat-icon>
       {{ l.tipoAlistamiento === 'INTERNACIONAL' ? 'Internacional' : 'Nacional' }}
     </li>
+    @if (l.ordenProduccion) {
+      <li class="orden">
+        <mat-icon aria-hidden="true">precision_manufacturing</mat-icon>
+        Sigue a {{ l.ordenProduccion }}
+      </li>
+    }
     @if (l.esAnexo) {
       <li class="anexo">
         <mat-icon aria-hidden="true">attach_file</mat-icon>
@@ -58,7 +64,7 @@
       <mat-icon>history</mat-icon>
       Historial
     </button>
-    @if (puedeCorregir() && l.avanceReportado) {
+    @if (puedeCorregir() && l.avanceReportado && !l.ordenProduccion) {
       <button matButton="outlined" type="button" (click)="corregir.emit(l)">
         <mat-icon>edit_note</mat-icon>
         Corregir piezas
@@ -70,7 +76,12 @@
         No sale
       </button>
     }
-    @if (puedeReportar()) {
+    @if (l.ordenProduccion) {
+      <a matButton="filled" [routerLink]="['/produccion', l.ordenProduccionId]">
+        <mat-icon>precision_manufacturing</mat-icon>
+        Ver {{ l.ordenProduccion }}
+      </a>
+    } @else if (puedeReportar()) {
       <button matButton="filled" type="button" (click)="reportar.emit(l)">
         <mat-icon>task_alt</mat-icon>
         Reportar avance

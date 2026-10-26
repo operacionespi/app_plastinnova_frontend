@@ -107,6 +107,7 @@ export class DetallePedido {
     corregirCantidad: this.sesion.tienePermiso(PERMISOS.corregirCantidad),
     noSale: this.sesion.tienePermiso(PERMISOS.noSale),
     verMateriales: this.sesion.tienePermiso(PERMISOS.verMateriales),
+    verEntregas: this.sesion.tienePermiso(PERMISOS.verEntregas),
   };
   protected readonly codigoNoSale = CODIGO_NO_SALE;
 

@@ -19,7 +19,7 @@ describe('ReportarAvance', () => {
     estadoActual: { id: 3, nombre: 'En ensamble' },
   };
   const dialogo = { close: vi.fn() };
-  let destinos: { id: number; nombre: string }[];
+  let destinos: { id: number; nombre: string; esFinal?: boolean }[];
   let cambiar: ReturnType<typeof vi.fn<(params: unknown) => Promise<unknown>>>;
   let fixture: ComponentFixture<ReportarAvance>;
 
@@ -137,10 +137,11 @@ describe('ReportarAvance', () => {
     }
   });
 
-  it('avisa si la etapa no tiene destinos configurados', async () => {
-    destinos = [];
+  it('no ofrece Entregado: la línea se entrega con remisión', async () => {
+    destinos = [{ id: 7, nombre: 'Entregado', esFinal: true }];
     await crear();
-    expect(texto()).toContain('no tiene etapas siguientes configuradas');
+    expect(texto()).not.toContain('Entregado');
+    expect(texto()).toContain('se registra con una remisión');
     const guardar = fixture.nativeElement.querySelector('button[type=submit]') as HTMLButtonElement;
     expect(guardar.disabled).toBe(true);
   });

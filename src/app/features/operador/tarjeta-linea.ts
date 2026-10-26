@@ -3,6 +3,7 @@ import { Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { RouterLink } from '@angular/router';
 import { LineaColaDto } from '../../api/models/linea-cola-dto';
 import { DiaPipe } from '../../core/ui/fechas';
 import { EstadoChip } from '../../core/ui/estado-chip';
@@ -18,6 +19,7 @@ import { EstadoChip } from '../../core/ui/estado-chip';
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    RouterLink,
   ],
   templateUrl: './tarjeta-linea.html',
   styleUrl: './tarjeta-linea.scss',

@@ -27,6 +27,10 @@ export const PERMISOS = {
   moverInventario: 'inventario:mover',
   gestionarInventario: 'inventario:gestionar',
   reservarInventario: 'inventario:reservar',
+  verProduccion: 'produccion:ver',
+  gestionarProduccion: 'produccion:gestionar',
+  verEntregas: 'entrega:ver',
+  gestionarEntregas: 'entrega:gestionar',
 } as const;
 
 /** Orden del menú. Las rutas también exigen el permiso (ver app.routes.ts). */
@@ -51,6 +55,18 @@ export const OPCIONES_MENU: readonly OpcionMenu[] = [
     ruta: '/operador/buscar',
     permiso: PERMISOS.reportarAvance,
     roles: ['OPERADOR'],
+  },
+  {
+    etiqueta: 'Producción',
+    icono: 'precision_manufacturing',
+    ruta: '/produccion',
+    permiso: PERMISOS.verProduccion,
+  },
+  {
+    etiqueta: 'Entregas',
+    icono: 'local_shipping',
+    ruta: '/entregas',
+    permiso: PERMISOS.verEntregas,
   },
   {
     etiqueta: 'Tableros',

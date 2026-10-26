@@ -55,3 +55,22 @@ html {
     )
   );
 }
+
+// Impresión (remisiones): solo el contenido de la página, sin menú ni barra superior
+@media print {
+  mat-sidenav,
+  .mat-drawer-backdrop,
+  header.encabezado,
+  .cdk-overlay-container,
+  .no-imprimir {
+    display: none !important;
+  }
+
+  .mat-drawer-content {
+    margin: 0 !important;
+  }
+
+  main.contenido {
+    padding: 0 !important;
+  }
+}

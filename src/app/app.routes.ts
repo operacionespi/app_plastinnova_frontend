@@ -58,6 +58,40 @@ export const routes: Routes = [
         data: { permiso: PERMISOS.verMateriales },
       },
       {
+        path: 'pedidos/:id/entregas',
+        title: 'Entregas del pedido',
+        loadComponent: () =>
+          import('./features/entregas/entregas-pedido').then((m) => m.EntregasPedido),
+        data: { permiso: PERMISOS.verEntregas },
+      },
+      {
+        path: 'produccion',
+        title: 'Órdenes de producción',
+        loadComponent: () =>
+          import('./features/produccion/ordenes-produccion').then((m) => m.OrdenesProduccion),
+        data: { permiso: PERMISOS.verProduccion },
+      },
+      {
+        path: 'produccion/:id',
+        title: 'Orden de producción',
+        loadComponent: () =>
+          import('./features/produccion/detalle-orden').then((m) => m.DetalleOrden),
+        data: { permiso: PERMISOS.verProduccion },
+      },
+      {
+        path: 'entregas',
+        title: 'Entregas',
+        loadComponent: () => import('./features/entregas/remisiones').then((m) => m.Remisiones),
+        data: { permiso: PERMISOS.verEntregas },
+      },
+      {
+        path: 'entregas/:id',
+        title: 'Remisión',
+        loadComponent: () =>
+          import('./features/entregas/detalle-remision').then((m) => m.DetalleRemision),
+        data: { permiso: PERMISOS.verEntregas },
+      },
+      {
         path: 'materiales',
         title: 'Lista de materiales',
         loadComponent: () =>

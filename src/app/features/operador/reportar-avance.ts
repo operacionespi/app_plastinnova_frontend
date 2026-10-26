@@ -51,13 +51,16 @@ export class ReportarAvance {
   protected readonly limite = this.linea.cantidadMaximaReporte ?? this.solicitada;
   protected readonly limitadaPorEtapaAnterior = !!this.linea.avanceReportado;
 
+  // Los estados finales no se eligen aquí: Entregado llega con las remisiones y No sale tiene su propia acción
   protected readonly destinos = resource({
-    loader: () =>
-      this.api.invoke(
-        estadosDetalleDestinos,
-        { id: this.linea.estadoActual?.id ?? 0 },
-        new HttpContext().set(MANEJA_ERRORES, true),
-      ),
+    loader: async () =>
+      (
+        await this.api.invoke(
+          estadosDetalleDestinos,
+          { id: this.linea.estadoActual?.id ?? 0 },
+          new HttpContext().set(MANEJA_ERRORES, true),
+        )
+      ).filter((d) => !d.esFinal),
   });
   protected readonly errorDestinos = computed(() =>
     this.destinos.error() ? leerProblema(this.destinos.error()).mensaje : null,
