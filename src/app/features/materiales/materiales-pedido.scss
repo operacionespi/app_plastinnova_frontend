@@ -125,6 +125,11 @@ table {
     font-variant-numeric: tabular-nums;
   }
 
+  .comprometida {
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-primary);
+  }
+
   .vacio {
     margin: 0 8px 4px;
   }

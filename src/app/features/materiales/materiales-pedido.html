@@ -21,10 +21,17 @@
     } @else {
       (aún no se ha cargado).
     }
-    A cada componente se le descuentan las existencias de la bodega que indica la lista; si hay
-    semiterminados en bodega, se requieren menos de sus componentes. No reserva inventario: cada
-    pedido se calcula por separado.
+    Solo se fabrica lo que no está comprometido de producto terminado. A cada componente se le
+    descuentan las existencias de la bodega que indica la lista; si hay semiterminados en bodega, se
+    requieren menos de sus componentes. Los componentes no se reservan: cada pedido se calcula por
+    separado.
   </p>
+
+  @if (puedeVerInventario) {
+    <section aria-labelledby="titulo-comprometido">
+      <pi-producto-comprometido [pedidoId]="m.pedidoId ?? 0" (cambio)="materiales.reload()" />
+    </section>
+  }
 
   @if (lineasSinLista()) {
     <p class="aviso" role="status">
@@ -119,6 +126,9 @@
           <span class="cantidad"
             >{{ l.cantidad | number }} {{ l.estructura?.unidad ?? 'Und' }}</span
           >
+          @if (l.reservada) {
+            <span class="comprometida">{{ l.reservada | number: '1.0-6' }} comprometidas</span>
+          }
         </h3>
         @if (l.estructura?.componentes?.length) {
           <pi-arbol-materiales [nodos]="l.estructura?.componentes ?? []" [abiertosHasta]="0" />

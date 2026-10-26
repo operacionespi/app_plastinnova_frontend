@@ -9,4 +9,5 @@ export interface LineaMaterialesDto {
   posicion?: number;
   productoNombre?: string;
   productoSku?: string;
+  reservada?: number;
 }

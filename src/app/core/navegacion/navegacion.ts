@@ -26,6 +26,7 @@ export const PERMISOS = {
   verInventario: 'inventario:ver',
   moverInventario: 'inventario:mover',
   gestionarInventario: 'inventario:gestionar',
+  reservarInventario: 'inventario:reservar',
 } as const;
 
 /** Orden del menú. Las rutas también exigen el permiso (ver app.routes.ts). */

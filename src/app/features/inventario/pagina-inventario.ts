@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,14 +14,26 @@ import { AccionExistencia, Existencias } from './existencias';
 import { NOMBRE_TIPO_MOVIMIENTO } from './inventario';
 import { Movimientos } from './movimientos';
 import { DatosMovimiento, RegistrarMovimiento } from './registrar-movimiento';
+import { Reservas } from './reservas';
+
+/** Pestañas en el orden en que aparecen; la primera no va en la URL. */
+const VISTAS = ['existencias', 'movimientos', 'reservas'];
 
 /**
- * Inventario por bodega y slot: existencias y bitácora de movimientos. La pestaña va en la URL (?vista=movimientos)
- * para que atrás y recargar la conserven.
+ * Inventario por bodega y slot: existencias, bitácora de movimientos y producto comprometido por los pedidos. La
+ * pestaña va en la URL (?vista=movimientos) para que atrás y recargar la conserven.
  */
 @Component({
   selector: 'pi-pagina-inventario',
-  imports: [Existencias, MatButtonModule, MatIconModule, MatTabsModule, Movimientos, RouterLink],
+  imports: [
+    Existencias,
+    MatButtonModule,
+    MatIconModule,
+    MatTabsModule,
+    Movimientos,
+    Reservas,
+    RouterLink,
+  ],
   template: `
     <div class="cabecera">
       <h1>Inventario</h1>
@@ -46,7 +58,7 @@ import { DatosMovimiento, RegistrarMovimiento } from './registrar-movimiento';
 
     <mat-tab-group
       mat-stretch-tabs="false"
-      [selectedIndex]="vista() === 'movimientos' ? 1 : 0"
+      [selectedIndex]="indiceVista()"
       (selectedIndexChange)="cambiarVista($event)"
     >
       <mat-tab label="Existencias">
@@ -59,6 +71,11 @@ import { DatosMovimiento, RegistrarMovimiento } from './registrar-movimiento';
       <mat-tab label="Movimientos">
         <ng-template matTabContent>
           <pi-movimientos [version]="version()" />
+        </ng-template>
+      </mat-tab>
+      <mat-tab label="Reservas">
+        <ng-template matTabContent>
+          <pi-reservas [version]="version()" />
         </ng-template>
       </mat-tab>
     </mat-tab-group>
@@ -100,8 +117,10 @@ export class PaginaInventario {
   /** Sube con cada movimiento o carga: las pestañas vuelven a consultar. */
   protected readonly version = signal(0);
 
+  protected readonly indiceVista = computed(() => Math.max(VISTAS.indexOf(this.vista() ?? ''), 0));
+
   protected cambiarVista(indice: number): void {
-    void this.router.navigate([], { queryParams: { vista: indice === 1 ? 'movimientos' : null } });
+    void this.router.navigate([], { queryParams: { vista: indice > 0 ? VISTAS[indice] : null } });
   }
 
   protected registrar(datos?: DatosMovimiento): void {

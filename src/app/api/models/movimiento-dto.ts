@@ -10,8 +10,10 @@ export interface MovimientoDto {
   itemCodigo?: string;
   itemDescripcion?: string;
   motivo?: string;
+  numeroPedido?: string;
   observaciones?: string;
   origen?: string;
+  pedidoId?: number;
   tipo?: 'ENTRADA' | 'SALIDA' | 'TRASLADO' | 'AJUSTE' | 'CARGA_INICIAL';
   unidad?: string;
   usuario?: string;

@@ -11,17 +11,21 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { listaMaterialesMaterialesPedido } from '../../api/fn/lista-de-materiales/lista-materiales-materiales-pedido';
 import { TotalMaterialDto } from '../../api/models/total-material-dto';
+import { Sesion } from '../../core/auth/sesion';
 import { MANEJA_ERRORES } from '../../core/http/contexto';
 import { leerProblema } from '../../core/http/problema';
+import { PERMISOS } from '../../core/navegacion/navegacion';
 import { UtcPipe } from '../../core/ui/fechas';
 import { ArbolMateriales, nombreTipo } from './arbol-materiales';
+import { ProductoComprometido } from './producto-comprometido';
 
 /** Filtro de los totales: lo que se fabrica (semiterminados) o lo que no tiene lista (materia prima, comprados). */
 type VistaTotales = 'todos' | 'fabricados' | 'basicos';
 
 /**
  * Semiterminados y materias primas que requiere un pedido según la lista de materiales, para la cantidad solicitada
- * de cada línea vigente, y cuánto falta después de descontar las existencias. Solo informa: no reserva inventario.
+ * de cada línea vigente, y cuánto falta después de lo comprometido de producto terminado y de las existencias de
+ * los componentes. Con permiso, el producto terminado se compromete aquí (ver ProductoComprometido).
  */
 @Component({
   selector: 'pi-materiales-pedido',
@@ -35,6 +39,7 @@ type VistaTotales = 'todos' | 'fabricados' | 'basicos';
     MatProgressBarModule,
     MatSlideToggleModule,
     MatTableModule,
+    ProductoComprometido,
     RouterLink,
     UtcPipe,
   ],
@@ -43,6 +48,8 @@ type VistaTotales = 'todos' | 'fabricados' | 'basicos';
 })
 export class MaterialesPedido {
   private readonly api = inject(Api);
+
+  protected readonly puedeVerInventario = inject(Sesion).tienePermiso(PERMISOS.verInventario);
 
   /** Parámetro de la ruta /pedidos/:id/materiales. */
   readonly id = input.required<string>();

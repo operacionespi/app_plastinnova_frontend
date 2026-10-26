@@ -39,12 +39,17 @@ export type { PagedModelItemResumenDto } from './models/paged-model-item-resumen
 export type { PagedModelLineaColaDto } from './models/paged-model-linea-cola-dto';
 export type { PagedModelMovimientoDto } from './models/paged-model-movimiento-dto';
 export type { PagedModelPedidoResumenDto } from './models/paged-model-pedido-resumen-dto';
+export type { PagedModelReservaDto } from './models/paged-model-reserva-dto';
 export type { PagedModelSyncLogResponseDto } from './models/paged-model-sync-log-response-dto';
 export type { PageMetadata } from './models/page-metadata';
 export type { PedidoDetalleResponseDto } from './models/pedido-detalle-response-dto';
 export type { PedidoResponseDto } from './models/pedido-response-dto';
 export type { PedidoResumenDto } from './models/pedido-resumen-dto';
 export type { ProblemDetail } from './models/problem-detail';
+export type { ReservaDto } from './models/reserva-dto';
+export type { ReservaLineaDto } from './models/reserva-linea-dto';
+export type { ReservaRequestDto } from './models/reserva-request-dto';
+export type { ReservasPedidoDto } from './models/reservas-pedido-dto';
 export type { ResultadoEliminacionDto } from './models/resultado-eliminacion-dto';
 export type { RolResponseDto } from './models/rol-response-dto';
 export type { SlotDto } from './models/slot-dto';

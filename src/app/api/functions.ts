@@ -17,6 +17,16 @@ export type { UsuarioActivar$Params as UsuarioActivar$Params } from './fn/usuari
 export { usuarioActivar as usuarioActivar } from './fn/usuarios/usuario-activar';
 export type { UsuarioRoles$Params as UsuarioRoles$Params } from './fn/usuarios/usuario-roles';
 export { usuarioRoles as usuarioRoles } from './fn/usuarios/usuario-roles';
+export type { ReservaInventarioReservar$Params as ReservaInventarioReservar$Params } from './fn/reservas-de-inventario/reserva-inventario-reservar';
+export { reservaInventarioReservar as reservaInventarioReservar } from './fn/reservas-de-inventario/reserva-inventario-reservar';
+export type { ReservaInventarioComprometer$Params as ReservaInventarioComprometer$Params } from './fn/reservas-de-inventario/reserva-inventario-comprometer';
+export { reservaInventarioComprometer as reservaInventarioComprometer } from './fn/reservas-de-inventario/reserva-inventario-comprometer';
+export type { ReservaInventarioReservasPedido$Params as ReservaInventarioReservasPedido$Params } from './fn/reservas-de-inventario/reserva-inventario-reservas-pedido';
+export { reservaInventarioReservasPedido as reservaInventarioReservasPedido } from './fn/reservas-de-inventario/reserva-inventario-reservas-pedido';
+export type { ReservaInventarioLiberar$Params as ReservaInventarioLiberar$Params } from './fn/reservas-de-inventario/reserva-inventario-liberar';
+export { reservaInventarioLiberar as reservaInventarioLiberar } from './fn/reservas-de-inventario/reserva-inventario-liberar';
+export type { ReservaInventarioListar$Params as ReservaInventarioListar$Params } from './fn/reservas-de-inventario/reserva-inventario-listar';
+export { reservaInventarioListar as reservaInventarioListar } from './fn/reservas-de-inventario/reserva-inventario-listar';
 export type { PedidoAsignarFechaEstimadaEntrega$Params as PedidoAsignarFechaEstimadaEntrega$Params } from './fn/pedidos-agregado-raiz/pedido-asignar-fecha-estimada-entrega';
 export { pedidoAsignarFechaEstimadaEntrega as pedidoAsignarFechaEstimadaEntrega } from './fn/pedidos-agregado-raiz/pedido-asignar-fecha-estimada-entrega';
 export type { PedidoCambiarEstadoPedido$Params as PedidoCambiarEstadoPedido$Params } from './fn/pedidos-agregado-raiz/pedido-cambiar-estado-pedido';
