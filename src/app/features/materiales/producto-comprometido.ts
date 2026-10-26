@@ -33,7 +33,8 @@ export const NOMBRE_ESTADO_COMPROMISO: Record<EstadoCompromiso, string> = {
 
 /**
  * Producto terminado del pedido en la bodega de producto terminado: lo que cada línea tiene comprometido, lo que hay
- * y lo libre. Comprometer reserva lo libre para el pedido; al entregarse la línea, lo reservado sale de la bodega.
+ * y lo libre. Comprometer reserva lo libre para el pedido; lo producido entra ya comprometido para su línea. Al
+ * entregarse la línea o facturarse el pedido, lo reservado sale de la bodega.
  */
 @Component({
   selector: 'pi-producto-comprometido',
@@ -76,8 +77,9 @@ export const NOMBRE_ESTADO_COMPROMISO: Record<EstadoCompromiso, string> = {
     } @else if (reservas.value(); as r) {
       <p class="ayuda">
         Unidades de la bodega {{ r.bodega }} apartadas para este pedido. Libre es lo que hay en la
-        bodega menos lo que tienen comprometido todos los pedidos. Al entregar la línea, lo
-        comprometido sale de la bodega.
+        bodega menos lo que tienen comprometido todos los pedidos. Lo producido entra a la bodega
+        comprometido para su línea al llegar a Almacén 1. Al entregar la línea o facturar el pedido,
+        lo comprometido sale de la bodega.
       </p>
       @if (r.lineas?.length) {
         <div class="tabla">
