@@ -17,8 +17,9 @@ import { EstadoChip } from '../../core/ui/estado-chip';
 import { DiaPipe } from '../../core/ui/fechas';
 
 /**
- * Líneas de pedidos abiertos que piden el ítem de la orden y aún no tienen quién las produzca. Cada una se asigna con
- * sus piezas; al cerrar devuelve la orden actualizada (o nada si no se asignó ninguna).
+ * Líneas de pedidos abiertos que piden alguno de los productos en proceso de la orden y aún no tienen quién las
+ * produzca. Cada una se asigna con sus piezas (sin pasar de lo que el producto tiene en proceso sin asignar); al
+ * cerrar devuelve la orden actualizada (o nada si no se asignó ninguna).
  */
 @Component({
   selector: 'pi-vincular-lineas',
@@ -37,9 +38,11 @@ import { DiaPipe } from '../../core/ui/fechas';
     <h2 mat-dialog-title>Líneas para {{ orden().numero }}</h2>
     <mat-dialog-content>
       <p class="ayuda">
-        {{ orden().itemCodigo }} · quedan <strong>{{ sinAsignar() | number }}</strong> de
-        {{ orden().cantidad | number }} piezas sin asignar. Cada línea muestra lo que le falta sin
-        contar lo comprometido ni lo entregado.
+        Piezas en proceso sin asignar:
+        @for (p of enProceso(); track p.id; let ultimo = $last) {
+          <strong>{{ p.itemCodigo }}</strong> {{ p.porAsignar | number }}{{ ultimo ? '.' : ',' }}
+        }
+        Cada línea muestra lo que le falta sin contar lo comprometido ni lo entregado.
       </p>
       @if (error(); as mensaje) {
         <p class="mensaje-error" role="alert">{{ mensaje }}</p>
@@ -52,6 +55,7 @@ import { DiaPipe } from '../../core/ui/fechas';
             <li>
               <div class="datos">
                 <span class="codigo">Pedido {{ l.numeroPedido }} · línea {{ l.posicion }}</span>
+                <span>{{ l.itemCodigo }}</span>
                 <span class="secundario">{{ l.cliente }}</span>
                 <span class="secundario">
                   Le faltan {{ l.cantidad | number }} de {{ l.cantidadSolicitada | number }}
@@ -86,7 +90,7 @@ import { DiaPipe } from '../../core/ui/fechas';
               </button>
             </li>
           } @empty {
-            <li class="vacio">No hay líneas pendientes de {{ orden().itemCodigo }} sin orden.</li>
+            <li class="vacio">No hay líneas pendientes sin orden de estos productos.</li>
           }
         </ul>
       }
@@ -154,8 +158,8 @@ export class VincularLineas {
   protected readonly orden = signal(inject<OrdenProduccionDto>(MAT_DIALOG_DATA));
   /** Sube con cada asignación: las candidatas se vuelven a consultar. */
   private readonly version = signal(0);
-  protected readonly sinAsignar = computed(
-    () => (this.orden().cantidad ?? 0) - (this.orden().cantidadAsignada ?? 0),
+  protected readonly enProceso = computed(() =>
+    (this.orden().productos ?? []).filter((p) => !p.terminado),
   );
   protected readonly candidatas = resource({
     params: () => ({ id: this.orden().id ?? 0, version: this.version() }),
@@ -171,7 +175,8 @@ export class VincularLineas {
   private cambio = false;
 
   protected maximo(l: LineaOrdenDto): number {
-    return Math.max(Math.min(l.cantidad ?? 0, this.sinAsignar()), 0);
+    const producto = this.enProceso().find((p) => p.itemCodigo === l.itemCodigo);
+    return Math.max(Math.min(l.cantidad ?? 0, producto?.porAsignar ?? 0), 0);
   }
 
   protected async asignar(l: LineaOrdenDto, piezas: number): Promise<void> {

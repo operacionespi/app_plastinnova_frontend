@@ -25,6 +25,16 @@
         Materiales
       </a>
     }
+    @if (puede.crearOrden && !p.fechaCierre && !p.eliminadoEnFm) {
+      <a
+        matButton="outlined"
+        routerLink="/produccion/nueva"
+        [queryParams]="{ texto: p.numeroPedido }"
+      >
+        <mat-icon>precision_manufacturing</mat-icon>
+        Orden de producción
+      </a>
+    }
     @if (puede.verEntregas) {
       <a matButton="outlined" [routerLink]="['/pedidos', p.id, 'entregas']">
         <mat-icon>local_shipping</mat-icon>

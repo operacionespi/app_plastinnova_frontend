@@ -15,10 +15,7 @@
   @let abierta = o.estado === 'ABIERTA';
   <div class="cabecera">
     <h1>{{ o.numero }}</h1>
-    <pi-estado-chip [estado]="o.etapa" />
-    @if (!abierta) {
-      <span [class]="'etiqueta ' + o.estado">{{ nombreEstado[o.estado ?? 'ABIERTA'] }}</span>
-    }
+    <span [class]="'etiqueta ' + o.estado">{{ nombreEstado[o.estado ?? 'ABIERTA'] }}</span>
     <span class="espacio"></span>
     @if (abierta && puede.gestionar) {
       <button matButton="outlined" type="button" [disabled]="ocupado()" (click)="anular(o)">
@@ -29,36 +26,26 @@
         <mat-icon>edit</mat-icon>
         Editar
       </button>
-    }
-    @if (abierta && puede.avanzar && o.etapasSiguientes?.length) {
-      <button matButton="filled" type="button" [disabled]="ocupado()" (click)="avanzar(o)">
-        <mat-icon>task_alt</mat-icon>
-        Reportar avance
+      <button
+        matButton="outlined"
+        type="button"
+        [disabled]="ocupado()"
+        (click)="agregarProducto(o)"
+      >
+        <mat-icon>add</mat-icon>
+        Producto
       </button>
+      @if (enProceso()) {
+        <button matButton="tonal" type="button" [disabled]="ocupado()" (click)="asignarLineas(o)">
+          <mat-icon>playlist_add</mat-icon>
+          Asignar líneas
+        </button>
+      }
     }
   </div>
 
   <section class="datos" aria-label="Datos de la orden">
     <dl>
-      <div>
-        <dt>Ítem</dt>
-        <dd>
-          <span class="codigo">{{ o.itemCodigo }}</span> {{ o.itemDescripcion }}
-        </dd>
-      </div>
-      <div>
-        <dt>Piezas</dt>
-        <dd>
-          {{ o.cantidad | number }} {{ o.unidad }}
-          @if (o.cantidadProcesada) {
-            · {{ o.cantidadProcesada | number }} en {{ o.etapa?.nombre }}
-          }
-        </dd>
-      </div>
-      <div>
-        <dt>Entra a</dt>
-        <dd>{{ o.bodegaDestino }} (slot de producción)</dd>
-      </div>
       <div>
         <dt>Requerida</dt>
         <dd>
@@ -84,151 +71,284 @@
     </dl>
   </section>
 
-  <section aria-labelledby="titulo-lineas">
-    <div class="cabecera-seccion">
-      <h2 id="titulo-lineas">Pedidos que atiende</h2>
-      <span class="secundario">
-        {{ o.cantidadAsignada | number }} de {{ o.cantidad | number }} piezas asignadas; lo demás
-        queda libre en inventario.
-      </span>
-      <span class="espacio"></span>
-      @if (abierta && puede.gestionar && o.bodegaDestino) {
-        <button matButton="tonal" type="button" [disabled]="ocupado()" (click)="asignarLineas(o)">
-          <mat-icon>playlist_add</mat-icon>
-          Asignar líneas
-        </button>
-      }
-    </div>
-    @if (o.lineas?.length) {
-      <div class="tabla">
-        <table mat-table [dataSource]="o.lineas ?? []" aria-labelledby="titulo-lineas">
-          <ng-container matColumnDef="pedido">
-            <th mat-header-cell *matHeaderCellDef>Pedido</th>
-            <td mat-cell *matCellDef="let l">
-              <a class="codigo enlace" [routerLink]="['/pedidos', l.pedidoId]"
-                >{{ l.numeroPedido }} · línea {{ l.posicion }}</a
-              >
-              <span class="secundario">{{ l.cliente }}</span>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="etapa">
-            <th mat-header-cell *matHeaderCellDef>Etapa de la línea</th>
-            <td mat-cell *matCellDef="let l">
-              <pi-estado-chip [estado]="l.estadoLinea" />
-              @if (!l.activa) {
-                <span class="secundario">Ya no sigue a la orden</span>
+  <section aria-labelledby="titulo-productos">
+    <h2 id="titulo-productos">Productos</h2>
+    <p class="ayuda">
+      Cada proceso entrega sus piezas al siguiente de la ruta; el último las entrega a
+      {{ o.etapaRecepcion?.nombre }}, donde se consumen los materiales y lo producido entra a la
+      bodega comprometido para las líneas. Las líneas van en el proceso de sus piezas más atrasadas.
+    </p>
+    @for (p of o.productos ?? []; track p.id) {
+      <article class="producto" [attr.aria-labelledby]="'producto-' + p.id">
+        <header class="cabecera-seccion">
+          <div class="titulo-producto">
+            <h3 [id]="'producto-' + p.id">
+              <span class="codigo">{{ p.itemCodigo }}</span> {{ p.itemDescripcion }}
+            </h3>
+            <span class="secundario">
+              {{ p.cantidad | number }} {{ p.unidad }} · ruta
+              {{ p.ruta ?? 'con todos los procesos' }} · entra a {{ p.bodegaDestino }}
+              @if (p.cantidadBaja) {
+                · {{ p.cantidadBaja | number }} de baja
               }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="cantidad">
-            <th mat-header-cell *matHeaderCellDef class="numero">Asignadas</th>
-            <td mat-cell *matCellDef="let l" class="numero">
-              {{ l.cantidad | number }}
-              <span class="secundario">de {{ l.cantidadSolicitada | number }} solicitadas</span>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="entrega">
-            <th mat-header-cell *matHeaderCellDef>Entrega</th>
-            <td mat-cell *matCellDef="let l" class="nowrap">
-              {{ l.fechaEstimadaEntrega ? (l.fechaEstimadaEntrega | dia | date: 'd MMM y') : '—' }}
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef>
-              <span class="cdk-visually-hidden">Acciones</span>
-            </th>
-            <td mat-cell *matCellDef="let l" class="acciones">
-              @if (abierta && puede.gestionar && l.activa) {
+            </span>
+          </div>
+          <span class="espacio"></span>
+          @if (abierta && !p.terminado) {
+            @if (puede.gestionar) {
+              @if (!p.conEntregas && !p.pendienteDeLineas && (o.productos?.length ?? 0) > 1) {
                 <button
                   matIconButton
                   type="button"
                   [disabled]="ocupado()"
-                  [attr.aria-label]="
-                    'Quitar la línea ' + l.posicion + ' del pedido ' + l.numeroPedido
-                  "
+                  [attr.aria-label]="'Quitar ' + p.itemCodigo + ' de la orden'"
                   matTooltip="Quitar de la orden"
-                  (click)="desvincular(o, l)"
+                  (click)="quitarProducto(o, p)"
                 >
-                  <mat-icon>link_off</mat-icon>
+                  <mat-icon>delete</mat-icon>
                 </button>
               }
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="columnasLineas"></tr>
-          <tr
-            mat-row
-            *matRowDef="let fila; columns: columnasLineas"
-            [class.inactiva]="!fila.activa"
-          ></tr>
-        </table>
-      </div>
-    } @else {
-      <p class="vacio">La orden produce para inventario: no atiende líneas de pedido.</p>
+              <button
+                matButton="outlined"
+                type="button"
+                [disabled]="ocupado()"
+                (click)="cambiarCantidad(o, p)"
+              >
+                <mat-icon>edit</mat-icon>
+                Cantidad
+              </button>
+              <button
+                matButton="outlined"
+                type="button"
+                [disabled]="ocupado()"
+                (click)="darDeBaja(o, p)"
+              >
+                <mat-icon>delete_sweep</mat-icon>
+                Dar de baja
+              </button>
+            }
+            @if (puede.entregar) {
+              <button
+                matButton="filled"
+                type="button"
+                [disabled]="ocupado()"
+                (click)="entregar(o, p)"
+              >
+                <mat-icon>forward</mat-icon>
+                Entregar
+              </button>
+            }
+          } @else if (p.terminado) {
+            <span class="etiqueta TERMINADA">Terminado</span>
+          }
+        </header>
+
+        <ol class="flujo" [attr.aria-label]="'Piezas de ' + p.itemCodigo + ' por proceso'">
+          @for (e of p.etapas ?? []; track e.etapa?.id) {
+            <li [style.border-top-color]="e.etapa?.color ?? null" [class.vacia]="!e.cantidad">
+              @if (abierta && puede.entregar && e.cantidad) {
+                <button
+                  type="button"
+                  class="paso"
+                  [disabled]="ocupado()"
+                  [attr.aria-label]="
+                    'Entregar desde ' + e.etapa?.nombre + ': ' + e.cantidad + ' piezas'
+                  "
+                  (click)="entregar(o, p, e.etapa?.id)"
+                >
+                  <span class="nombre">{{ e.etapa?.nombre }}</span>
+                  <span class="cantidad">{{ e.cantidad | number }}</span>
+                </button>
+              } @else {
+                <div class="paso">
+                  <span class="nombre">{{ e.etapa?.nombre }}</span>
+                  <span class="cantidad">{{ e.cantidad | number }}</span>
+                </div>
+              }
+            </li>
+          }
+          <li class="almacen" [style.border-top-color]="o.etapaRecepcion?.color ?? null">
+            <div class="paso">
+              <span class="nombre">{{ o.etapaRecepcion?.nombre }}</span>
+              <span class="cantidad">{{ p.cantidadRecibida | number }}</span>
+            </div>
+          </li>
+        </ol>
+
+        @if (p.lineas?.length) {
+          <h4>
+            Pedidos que atiende
+            <span class="secundario">
+              · esperan {{ p.pendienteDeLineas | number }}; {{ p.porAsignar | number }} en proceso
+              sin asignar
+            </span>
+          </h4>
+          <div class="tabla">
+            <table
+              mat-table
+              [dataSource]="p.lineas ?? []"
+              [attr.aria-label]="'Pedidos de ' + p.itemCodigo"
+            >
+              <ng-container matColumnDef="pedido">
+                <th mat-header-cell *matHeaderCellDef>Pedido</th>
+                <td mat-cell *matCellDef="let l">
+                  <a class="codigo enlace" [routerLink]="['/pedidos', l.pedidoId]"
+                    >{{ l.numeroPedido }} · línea {{ l.posicion }}</a
+                  >
+                  <span class="secundario">{{ l.cliente }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="etapa">
+                <th mat-header-cell *matHeaderCellDef>Etapa de la línea</th>
+                <td mat-cell *matCellDef="let l">
+                  <pi-estado-chip [estado]="l.estadoLinea" />
+                  @if (!l.activa) {
+                    <span class="secundario">Ya no sigue a la orden</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="cantidad">
+                <th mat-header-cell *matHeaderCellDef class="numero">Asignadas</th>
+                <td mat-cell *matCellDef="let l" class="numero">
+                  {{ l.cantidad | number }}
+                  <span class="secundario">{{ l.cantidadRecibida | number }} en almacén</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="entrega">
+                <th mat-header-cell *matHeaderCellDef>Entrega</th>
+                <td mat-cell *matCellDef="let l" class="nowrap">
+                  {{
+                    l.fechaEstimadaEntrega ? (l.fechaEstimadaEntrega | dia | date: 'd MMM y') : '—'
+                  }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>
+                  <span class="cdk-visually-hidden">Acciones</span>
+                </th>
+                <td mat-cell *matCellDef="let l" class="acciones">
+                  @if (abierta && puede.gestionar && l.activa) {
+                    <button
+                      matIconButton
+                      type="button"
+                      [disabled]="ocupado()"
+                      [attr.aria-label]="
+                        'Quitar la línea ' + l.posicion + ' del pedido ' + l.numeroPedido
+                      "
+                      matTooltip="Quitar de la orden"
+                      (click)="desvincular(o, l)"
+                    >
+                      <mat-icon>link_off</mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columnasLineas"></tr>
+              <tr
+                mat-row
+                *matRowDef="let fila; columns: columnasLineas"
+                [class.inactiva]="!fila.activa"
+              ></tr>
+            </table>
+          </div>
+        } @else {
+          <p class="vacio">Para inventario: no atiende líneas de pedido.</p>
+        }
+
+        <details class="materiales" [open]="abierta && !p.terminado && faltanMateriales(p)">
+          <summary>
+            Materiales
+            @if (abierta && !p.terminado && faltanMateriales(p)) {
+              <span class="etiqueta falta">
+                <mat-icon aria-hidden="true">warning</mat-icon>
+                Faltan para las {{ p.enProceso | number }} piezas en proceso
+              </span>
+            }
+          </summary>
+          <p class="ayuda">
+            Componentes del primer nivel de la lista de materiales. Se consumen de su bodega al
+            entregar a {{ o.etapaRecepcion?.nombre }} o al dar de baja, sin tocar lo comprometido
+            por pedidos; si alguno no alcanza, se rechaza.
+          </p>
+          @if (p.componentes?.length) {
+            <div class="tabla">
+              <table
+                mat-table
+                [dataSource]="p.componentes ?? []"
+                [attr.aria-label]="'Materiales de ' + p.itemCodigo"
+              >
+                <ng-container matColumnDef="componente">
+                  <th mat-header-cell *matHeaderCellDef>Componente</th>
+                  <td mat-cell *matCellDef="let c">
+                    <span class="codigo">{{ c.codigo }}</span>
+                    <span class="secundario">{{ c.descripcion }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="bodega">
+                  <th mat-header-cell *matHeaderCellDef>Bodega</th>
+                  <td mat-cell *matCellDef="let c">
+                    {{ c.bodega ?? 'Sin bodega: no se consume' }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="porUnidad">
+                  <th mat-header-cell *matHeaderCellDef class="numero">Por pieza</th>
+                  <td mat-cell *matCellDef="let c" class="numero">
+                    {{ c.cantidadPorUnidad | number: '1.0-6' }}
+                    <span class="secundario">{{ c.unidad }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="requerido">
+                  <th mat-header-cell *matHeaderCellDef class="numero">
+                    {{ abierta && !p.terminado ? 'Para lo en proceso' : 'Consumido' }}
+                  </th>
+                  <td mat-cell *matCellDef="let c" class="numero" [class.falta]="!c.alcanza">
+                    {{ c.requerido | number: '1.0-6' }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="libre">
+                  <th mat-header-cell *matHeaderCellDef class="numero">Libre ahora</th>
+                  <td mat-cell *matCellDef="let c" class="numero">
+                    {{
+                      c.libre === undefined || c.libre === null ? '—' : (c.libre | number: '1.0-6')
+                    }}
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="columnasComponentes"></tr>
+                <tr mat-row *matRowDef="let fila; columns: columnasComponentes"></tr>
+              </table>
+            </div>
+          } @else {
+            <p class="vacio">El ítem no tiene lista de materiales: no consume componentes.</p>
+          }
+        </details>
+      </article>
     }
   </section>
 
-  <section aria-labelledby="titulo-materiales">
-    <div class="cabecera-seccion">
-      <h2 id="titulo-materiales">Materiales</h2>
-      @if (abierta && faltanMateriales()) {
-        <span class="etiqueta falta">
-          <mat-icon aria-hidden="true">warning</mat-icon>
-          Faltan materiales para {{ o.cantidadMaximaReportable | number }} piezas
-        </span>
-      }
-    </div>
-    <p class="ayuda">
-      Componentes del primer nivel de la lista de materiales. Se consumen de su bodega cuando la
-      orden llega a la bodega, sin tocar lo comprometido por pedidos; si alguno no alcanza, el
-      reporte se rechaza.
-      @if (abierta) {
-        Lo requerido es para las {{ o.cantidadMaximaReportable | number }} piezas que puede reportar
-        la etapa actual.
-      }
-    </p>
-    @if (o.componentes?.length) {
-      <div class="tabla">
-        <table mat-table [dataSource]="o.componentes ?? []" aria-labelledby="titulo-materiales">
-          <ng-container matColumnDef="componente">
-            <th mat-header-cell *matHeaderCellDef>Componente</th>
-            <td mat-cell *matCellDef="let c">
-              <span class="codigo">{{ c.codigo }}</span>
-              <span class="secundario">{{ c.descripcion }}</span>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="bodega">
-            <th mat-header-cell *matHeaderCellDef>Bodega</th>
-            <td mat-cell *matCellDef="let c">{{ c.bodega ?? 'Sin bodega: no se consume' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="porUnidad">
-            <th mat-header-cell *matHeaderCellDef class="numero">Por pieza</th>
-            <td mat-cell *matCellDef="let c" class="numero">
-              {{ c.cantidadPorUnidad | number: '1.0-6' }}
-              <span class="secundario">{{ c.unidad }}</span>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="requerido">
-            <th mat-header-cell *matHeaderCellDef class="numero">
-              {{ abierta ? 'Requerido' : 'Consumido' }}
-            </th>
-            <td mat-cell *matCellDef="let c" class="numero" [class.falta]="!c.alcanza">
-              {{ c.requerido | number: '1.0-6' }}
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="libre">
-            <th mat-header-cell *matHeaderCellDef class="numero">Libre ahora</th>
-            <td mat-cell *matCellDef="let c" class="numero">
-              {{ c.libre === undefined || c.libre === null ? '—' : (c.libre | number: '1.0-6') }}
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="columnasComponentes"></tr>
-          <tr mat-row *matRowDef="let fila; columns: columnasComponentes"></tr>
-        </table>
-      </div>
-    } @else {
-      <p class="vacio">El ítem no tiene lista de materiales: no consume componentes.</p>
-    }
-  </section>
+  @if (o.entregas?.length) {
+    <section aria-labelledby="titulo-entregas">
+      <h2 id="titulo-entregas">Entregas entre procesos</h2>
+      <ol class="lista">
+        @for (e of o.entregas; track e.id) {
+          <li>
+            <span class="codigo">{{ nombreEntrega[e.tipo ?? 'AVANCE'] }}</span>
+            {{ e.cantidad | number }} de {{ e.itemCodigo }}:
+            @if (e.tipo === 'BAJA') {
+              en {{ e.origen?.nombre }}
+            } @else {
+              {{ e.origen?.nombre }} → {{ e.destino?.nombre }}
+            }
+            <span class="secundario">
+              · {{ e.fecha | utc | date: 'd MMM y, h:mm a' }} · {{ e.usuario }}
+            </span>
+            @if (e.observaciones) {
+              <span class="observacion">{{ e.observaciones }}</span>
+            }
+          </li>
+        }
+      </ol>
+    </section>
+  }
 
   @if (o.movimientos?.length) {
     <section aria-labelledby="titulo-movimientos">

@@ -14,9 +14,11 @@ import { Api } from '../../api/api';
 import { ordenProduccionAnular } from '../../api/fn/ordenes-de-produccion/orden-produccion-anular';
 import { ordenProduccionDesvincular } from '../../api/fn/ordenes-de-produccion/orden-produccion-desvincular';
 import { ordenProduccionObtener } from '../../api/fn/ordenes-de-produccion/orden-produccion-obtener';
+import { ordenProduccionQuitarProducto } from '../../api/fn/ordenes-de-produccion/orden-produccion-quitar-producto';
 import { HistorialOrdenDto } from '../../api/models/historial-orden-dto';
 import { LineaOrdenDto } from '../../api/models/linea-orden-dto';
 import { OrdenProduccionDto } from '../../api/models/orden-produccion-dto';
+import { ProductoOrdenDto } from '../../api/models/producto-orden-dto';
 import { Sesion } from '../../core/auth/sesion';
 import { MANEJA_ERRORES } from '../../core/http/contexto';
 import { leerProblema } from '../../core/http/problema';
@@ -27,9 +29,10 @@ import { EstadoChip } from '../../core/ui/estado-chip';
 import { DiaPipe, UtcPipe } from '../../core/ui/fechas';
 import { DatosJustificacion, Justificacion } from '../../core/ui/justificacion';
 import { NOMBRE_TIPO_MOVIMIENTO } from '../inventario/inventario';
-import { AvanzarOrden } from './avanzar-orden';
+import { DatosEntrega, EntregarProceso } from './entregar-proceso';
 import { FormularioOrden } from './formulario-orden';
-import { NOMBRE_ESTADO_ORDEN } from './produccion';
+import { DatosProducto, FormularioProducto } from './formulario-producto';
+import { NOMBRE_ESTADO_ORDEN, NOMBRE_TIPO_ENTREGA } from './produccion';
 import { VincularLineas } from './vincular-lineas';
 
 const NOMBRE_TIPO_HISTORIAL: Record<NonNullable<HistorialOrdenDto['tipo']>, string> = {
@@ -39,7 +42,10 @@ const NOMBRE_TIPO_HISTORIAL: Record<NonNullable<HistorialOrdenDto['tipo']>, stri
   ANULACION: 'Anulada',
 };
 
-/** Una orden de producción: avance por etapas, líneas de pedido que atiende, materiales e historial. */
+/**
+ * Una orden de producción: por cada producto, las piezas en cada proceso de su ruta (con las entregas entre procesos),
+ * las líneas de pedido que atiende y sus materiales; además, las entregas, los movimientos y el historial.
+ */
 @Component({
   selector: 'pi-detalle-orden',
   imports: [
@@ -69,10 +75,11 @@ export class DetalleOrden {
 
   protected readonly puede = {
     gestionar: this.sesion.tienePermiso(PERMISOS.gestionarProduccion),
-    avanzar: this.sesion.tienePermiso(PERMISOS.reportarAvance),
+    entregar: this.sesion.tienePermiso(PERMISOS.reportarAvance),
   };
   protected readonly nombreEstado = NOMBRE_ESTADO_ORDEN;
   protected readonly nombreHistorial = NOMBRE_TIPO_HISTORIAL;
+  protected readonly nombreEntrega = NOMBRE_TIPO_ENTREGA;
   protected readonly nombreMovimiento = NOMBRE_TIPO_MOVIMIENTO;
   protected readonly columnasLineas = ['pedido', 'etapa', 'cantidad', 'entrega', 'acciones'];
   protected readonly columnasComponentes = [
@@ -91,19 +98,47 @@ export class DetalleOrden {
   protected readonly error = computed(() =>
     this.orden.error() ? leerProblema(this.orden.error()) : null,
   );
-  protected readonly lineasActivas = computed(() =>
-    (this.orden.value()?.lineas ?? []).filter((l) => l.activa),
-  );
-  protected readonly faltanMateriales = computed(() =>
-    (this.orden.value()?.componentes ?? []).some((c) => !c.alcanza),
+  protected readonly enProceso = computed(() =>
+    (this.orden.value()?.productos ?? []).some((p) => !p.terminado),
   );
   protected readonly ocupado = signal(false);
 
-  protected avanzar(o: OrdenProduccionDto): void {
-    this.abrir(AvanzarOrden, o, (actualizada) =>
-      actualizada.estado === 'TERMINADA'
-        ? `${actualizada.numero} terminó: ${actualizada.cantidadProcesada} piezas entraron a ${actualizada.bodegaDestino}.`
-        : `${actualizada.numero} pasó a ${actualizada.etapa?.nombre}.`,
+  protected faltanMateriales(p: ProductoOrdenDto): boolean {
+    return (p.componentes ?? []).some((c) => !c.alcanza);
+  }
+
+  protected entregar(o: OrdenProduccionDto, p: ProductoOrdenDto, origenId?: number): void {
+    this.abrir<EntregarProceso, DatosEntrega>(
+      EntregarProceso,
+      { orden: o, producto: p, origenId },
+      (actualizada) =>
+        actualizada.estado === 'TERMINADA'
+          ? `${actualizada.numero} terminó: todo llegó al almacén.`
+          : `Entrega de ${p.itemCodigo} registrada.`,
+    );
+  }
+
+  protected darDeBaja(o: OrdenProduccionDto, p: ProductoOrdenDto): void {
+    this.abrir<EntregarProceso, DatosEntrega>(
+      EntregarProceso,
+      { orden: o, producto: p, baja: true },
+      () => `Baja de ${p.itemCodigo} registrada.`,
+    );
+  }
+
+  protected cambiarCantidad(o: OrdenProduccionDto, p: ProductoOrdenDto): void {
+    this.abrir<FormularioProducto, DatosProducto>(
+      FormularioProducto,
+      { orden: o, producto: p },
+      () => `Cantidad de ${p.itemCodigo} actualizada.`,
+    );
+  }
+
+  protected agregarProducto(o: OrdenProduccionDto): void {
+    this.abrir<FormularioProducto, DatosProducto>(
+      FormularioProducto,
+      { orden: o },
+      (actualizada) => `${actualizada.numero}: producto agregado.`,
     );
   }
 
@@ -120,35 +155,36 @@ export class DetalleOrden {
     );
   }
 
-  protected async desvincular(o: OrdenProduccionDto, l: LineaOrdenDto): Promise<void> {
-    const confirmado = await firstValueFrom(
-      this.dialogos
-        .open<Confirmacion, DatosConfirmacion, boolean>(Confirmacion, {
-          data: {
-            titulo: 'Quitar la línea',
-            mensaje: `La línea ${l.posicion} del pedido ${l.numeroPedido} deja de seguir a ${o.numero} y se reporta por separado desde ${l.estadoLinea?.nombre}.`,
-            accion: 'Quitar',
-          },
-        })
-        .afterClosed(),
+  protected async quitarProducto(o: OrdenProduccionDto, p: ProductoOrdenDto): Promise<void> {
+    await this.confirmarYEjecutar(
+      {
+        titulo: `Quitar ${p.itemCodigo}`,
+        mensaje: `${o.numero} deja de producir ${p.itemCodigo}.`,
+        accion: 'Quitar',
+      },
+      () =>
+        this.api.invoke(
+          ordenProduccionQuitarProducto,
+          { id: o.id ?? 0, productoId: p.id ?? 0 },
+          new HttpContext().set(MANEJA_ERRORES, true),
+        ),
     );
-    if (!confirmado) {
-      return;
-    }
-    this.ocupado.set(true);
-    try {
-      this.orden.set(
-        await this.api.invoke(
+  }
+
+  protected async desvincular(o: OrdenProduccionDto, l: LineaOrdenDto): Promise<void> {
+    await this.confirmarYEjecutar(
+      {
+        titulo: 'Quitar la línea',
+        mensaje: `La línea ${l.posicion} del pedido ${l.numeroPedido} deja de seguir a ${o.numero} y se reporta por separado desde ${l.estadoLinea?.nombre}.`,
+        accion: 'Quitar',
+      },
+      () =>
+        this.api.invoke(
           ordenProduccionDesvincular,
           { id: o.id ?? 0, detalleId: l.detalleId ?? 0 },
           new HttpContext().set(MANEJA_ERRORES, true),
         ),
-      );
-    } catch (e) {
-      this.avisos.error(leerProblema(e).mensaje);
-    } finally {
-      this.ocupado.set(false);
-    }
+    );
   }
 
   protected anular(o: OrdenProduccionDto): void {
@@ -157,7 +193,7 @@ export class DetalleOrden {
         data: {
           titulo: `Anular ${o.numero}`,
           mensaje:
-            'La orden no se podrá retomar. Las líneas que atiende quedan en su etapa y se reportan por separado.',
+            'La orden no se podrá retomar. Las piezas en proceso salen de la orden, lo que llegó al almacén sigue en el inventario y las líneas que atiende quedan en su etapa.',
           accion: 'Anular orden',
           ejecutar: (justificacion) =>
             this.api.invoke(
@@ -178,15 +214,37 @@ export class DetalleOrden {
       });
   }
 
-  private abrir<C>(
+  private async confirmarYEjecutar(
+    datos: DatosConfirmacion,
+    accion: () => Promise<OrdenProduccionDto>,
+  ): Promise<void> {
+    const confirmado = await firstValueFrom(
+      this.dialogos
+        .open<Confirmacion, DatosConfirmacion, boolean>(Confirmacion, { data: datos })
+        .afterClosed(),
+    );
+    if (!confirmado) {
+      return;
+    }
+    this.ocupado.set(true);
+    try {
+      this.orden.set(await accion());
+    } catch (e) {
+      this.avisos.error(leerProblema(e).mensaje);
+    } finally {
+      this.ocupado.set(false);
+    }
+  }
+
+  private abrir<C, D = OrdenProduccionDto>(
     componente: ComponentType<C>,
-    o: OrdenProduccionDto,
+    datos: D,
     aviso: (o: OrdenProduccionDto) => string,
     sinCerrarPorFuera = false,
   ): void {
     this.dialogos
-      .open<C, OrdenProduccionDto, OrdenProduccionDto>(componente, {
-        data: o,
+      .open<C, D, OrdenProduccionDto>(componente, {
+        data: datos,
         width: '600px',
         maxWidth: '95vw',
         disableClose: sinCerrarPorFuera,

@@ -7,32 +7,31 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { AvanceOrdenRequestDto } from '../../models/avance-orden-request-dto';
-import { OrdenProduccionDto } from '../../models/orden-produccion-dto';
+import { ItemRutaDto } from '../../models/item-ruta-dto';
 
-export interface OrdenProduccionAvanzar$Params {
+export interface RutaProduccionQuitar$Params {
   id: number;
-  body: AvanceOrdenRequestDto;
+  codigo: string;
 }
 
-export function ordenProduccionAvanzar(
+export function rutaProduccionQuitar(
   http: HttpClient,
   rootUrl: string,
-  params: OrdenProduccionAvanzar$Params,
+  params: RutaProduccionQuitar$Params,
   context?: HttpContext,
-): Observable<StrictHttpResponse<OrdenProduccionDto>> {
-  const rb = new RequestBuilder(rootUrl, ordenProduccionAvanzar.PATH, 'post');
+): Observable<StrictHttpResponse<Array<ItemRutaDto>>> {
+  const rb = new RequestBuilder(rootUrl, rutaProduccionQuitar.PATH, 'delete');
   if (params) {
     rb.path('id', params.id, {});
-    rb.body(params.body, 'application/json');
+    rb.query('codigo', params.codigo, {});
   }
 
   return http.request(rb.build({ responseType: 'json', accept: 'application/json', context })).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<OrdenProduccionDto>;
+      return r as StrictHttpResponse<Array<ItemRutaDto>>;
     }),
   );
 }
 
-ordenProduccionAvanzar.PATH = '/api/v1/ordenes-produccion/{id}/avance';
+rutaProduccionQuitar.PATH = '/api/v1/rutas-produccion/{id}/items';

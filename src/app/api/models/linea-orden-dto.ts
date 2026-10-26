@@ -5,11 +5,15 @@ import { EstadoResponseDto } from '../models/estado-response-dto';
 export interface LineaOrdenDto {
   activa?: boolean;
   cantidad?: number;
+  cantidadRecibida?: number;
   cantidadSolicitada?: number;
   cliente?: string;
   detalleId?: number;
   estadoLinea?: EstadoResponseDto;
   fechaEstimadaEntrega?: string;
+  itemCodigo?: string;
+  itemDescripcion?: string;
+  motivo?: string;
   numeroPedido?: string;
   pedidoId?: number;
   posicion?: number;

@@ -3,7 +3,6 @@ import { HttpContext } from '@angular/common/http';
 import { Component, computed, inject, resource, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -11,19 +10,16 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { Api } from '../../api/api';
 import { estadosDetalleListar } from '../../api/fn/catalogo-estados-de-linea/estados-detalle-listar';
 import { ordenProduccionListar } from '../../api/fn/ordenes-de-produccion/orden-produccion-listar';
-import { OrdenProduccionDto } from '../../api/models/orden-produccion-dto';
 import { OrdenProduccionResumenDto } from '../../api/models/orden-produccion-resumen-dto';
 import { Sesion } from '../../core/auth/sesion';
 import { MANEJA_ERRORES } from '../../core/http/contexto';
 import { leerProblema } from '../../core/http/problema';
 import { PERMISOS } from '../../core/navegacion/navegacion';
-import { EstadoChip } from '../../core/ui/estado-chip';
 import { DiaPipe, UtcPipe } from '../../core/ui/fechas';
-import { FormularioOrden } from './formulario-orden';
 import { EstadoOrden, NOMBRE_ESTADO_ORDEN } from './produccion';
 
 const POR_PAGINA = 25;
@@ -41,7 +37,6 @@ interface Filtros {
     DatePipe,
     DecimalPipe,
     DiaPipe,
-    EstadoChip,
     FormField,
     MatButtonModule,
     MatFormFieldModule,
@@ -58,17 +53,22 @@ interface Filtros {
     <div class="cabecera">
       <h1>Órdenes de producción</h1>
       <span class="espacio"></span>
+      <a matButton="outlined" routerLink="/produccion/rutas">
+        <mat-icon>route</mat-icon>
+        Rutas
+      </a>
       @if (puedeGestionar) {
-        <button matButton="filled" type="button" (click)="nueva()">
+        <a matButton="filled" routerLink="/produccion/nueva">
           <mat-icon>add</mat-icon>
           Nueva orden
-        </button>
+        </a>
       }
     </div>
     <p class="ayuda">
-      Cada orden recorre las etapas de producción y arrastra las líneas de pedido que atiende. Al
-      llegar a Almacén 1 consume los materiales de la lista y lo producido entra a la bodega
-      comprometido para esas líneas.
+      Cada orden produce uno o más productos. Sus piezas pasan de un proceso al siguiente con
+      entregas parciales, según la ruta de cada producto, y las líneas de pedido siguen a sus
+      piezas. Al llegar a Almacén 1 se consumen los materiales y lo producido queda comprometido
+      para esas líneas.
     </p>
 
     <form class="filtros" role="search" (submit)="buscar($event)" novalidate>
@@ -86,7 +86,7 @@ interface Filtros {
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic" class="tipo">
-        <mat-label>Etapa</mat-label>
+        <mat-label>Con piezas en</mat-label>
         <mat-select [formField]="formulario.etapaId" (selectionChange)="buscar()">
           <mat-option [value]="null">Todas</mat-option>
           @for (e of etapas.value() ?? []; track e.id) {
@@ -117,26 +117,47 @@ interface Filtros {
                 <span class="secundario">{{ o.fechaCreacion | utc | date: 'd MMM y' }}</span>
               </td>
             </ng-container>
-            <ng-container matColumnDef="item">
-              <th mat-header-cell *matHeaderCellDef>Ítem</th>
+            <ng-container matColumnDef="productos">
+              <th mat-header-cell *matHeaderCellDef>Productos</th>
               <td mat-cell *matCellDef="let o">
-                <span class="codigo">{{ o.itemCodigo }}</span>
-                <span class="secundario">{{ o.itemDescripcion }}</span>
+                @for (p of o.productos; track p.itemCodigo; let i = $index) {
+                  @if (i < 2) {
+                    <span class="codigo">{{ p.itemCodigo }}</span>
+                  }
+                }
+                @if (o.productos.length > 2) {
+                  <span class="secundario">y {{ o.productos.length - 2 }} más</span>
+                } @else if (o.productos.length === 1) {
+                  <span class="secundario">{{ o.productos[0].itemDescripcion }}</span>
+                }
               </td>
             </ng-container>
             <ng-container matColumnDef="cantidad">
-              <th mat-header-cell *matHeaderCellDef class="numero">Piezas</th>
+              <th mat-header-cell *matHeaderCellDef class="numero">En almacén</th>
               <td mat-cell *matCellDef="let o" class="numero">
-                {{ o.cantidadProcesada | number }} / {{ o.cantidad | number }}
-                <span class="secundario">{{ o.unidad }}</span>
+                {{ o.cantidadRecibida | number }} / {{ o.cantidad | number }}
               </td>
             </ng-container>
             <ng-container matColumnDef="etapa">
-              <th mat-header-cell *matHeaderCellDef>Etapa</th>
+              <th mat-header-cell *matHeaderCellDef>En proceso</th>
               <td mat-cell *matCellDef="let o">
-                <pi-estado-chip [estado]="o.etapa" />
-                @if (o.estado !== 'ABIERTA') {
-                  <span class="secundario estado">{{ nombreDe(o) }}</span>
+                @if (o.estado === 'ABIERTA') {
+                  <div class="procesos">
+                    @for (e of o.enProceso; track e.etapa.id) {
+                      <span class="proceso">
+                        <span
+                          class="punto"
+                          aria-hidden="true"
+                          [style.background-color]="e.etapa.color ?? null"
+                        ></span>
+                        {{ e.etapa.nombre }} <strong>{{ e.cantidad | number }}</strong>
+                      </span>
+                    } @empty {
+                      <span class="secundario">Sin piezas en proceso</span>
+                    }
+                  </div>
+                } @else {
+                  <span class="secundario">{{ nombreDe(o) }}</span>
                 }
               </td>
             </ng-container>
@@ -144,7 +165,6 @@ interface Filtros {
               <th mat-header-cell *matHeaderCellDef>Pedidos</th>
               <td mat-cell *matCellDef="let o">
                 {{ o.pedidos?.length ? o.pedidos.join(', ') : 'Para inventario' }}
-                <span class="secundario">Entra a {{ o.bodegaDestino }}</span>
               </td>
             </ng-container>
             <ng-container matColumnDef="fecha">
@@ -185,7 +205,7 @@ interface Filtros {
       align-items: center;
       gap: 12px;
     }
-    .cabecera button {
+    .cabecera a {
       min-height: 48px;
     }
     h1 {
@@ -202,9 +222,22 @@ interface Filtros {
     a.codigo {
       color: var(--mat-sys-primary);
     }
-    .estado {
-      display: block;
-      margin-top: 4px;
+    .procesos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+    }
+    .proceso {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .punto {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--mat-sys-outline);
     }
     td .secundario {
       display: block;
@@ -213,11 +246,9 @@ interface Filtros {
 })
 export class OrdenesProduccion {
   private readonly api = inject(Api);
-  private readonly dialogos = inject(MatDialog);
-  private readonly router = inject(Router);
 
   protected readonly puedeGestionar = inject(Sesion).tienePermiso(PERMISOS.gestionarProduccion);
-  protected readonly columnas = ['numero', 'item', 'cantidad', 'etapa', 'pedidos', 'fecha'];
+  protected readonly columnas = ['numero', 'productos', 'cantidad', 'etapa', 'pedidos', 'fecha'];
   protected readonly estados: EstadoOrden[] = ['ABIERTA', 'TERMINADA', 'ANULADA'];
   protected readonly nombreEstado = NOMBRE_ESTADO_ORDEN;
 
@@ -252,19 +283,5 @@ export class OrdenesProduccion {
   // Las filas de mat-table no tienen tipo en la plantilla
   protected nombreDe(o: OrdenProduccionResumenDto): string {
     return NOMBRE_ESTADO_ORDEN[o.estado ?? 'ABIERTA'];
-  }
-
-  protected nueva(): void {
-    this.dialogos
-      .open<FormularioOrden, OrdenProduccionDto | undefined, OrdenProduccionDto>(FormularioOrden, {
-        width: '560px',
-        maxWidth: '95vw',
-      })
-      .afterClosed()
-      .subscribe((orden) => {
-        if (orden) {
-          void this.router.navigate(['/produccion', orden.id]);
-        }
-      });
   }
 }

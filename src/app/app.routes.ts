@@ -72,6 +72,19 @@ export const routes: Routes = [
         data: { permiso: PERMISOS.verProduccion },
       },
       {
+        path: 'produccion/nueva',
+        title: 'Nueva orden de producción',
+        loadComponent: () => import('./features/produccion/nueva-orden').then((m) => m.NuevaOrden),
+        data: { permiso: PERMISOS.gestionarProduccion },
+      },
+      {
+        path: 'produccion/rutas',
+        title: 'Rutas de producción',
+        loadComponent: () =>
+          import('./features/produccion/rutas-produccion').then((m) => m.RutasProduccion),
+        data: { permiso: PERMISOS.verProduccion },
+      },
+      {
         path: 'produccion/:id',
         title: 'Orden de producción',
         loadComponent: () =>

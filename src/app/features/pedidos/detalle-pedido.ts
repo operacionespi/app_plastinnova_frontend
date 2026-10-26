@@ -108,6 +108,7 @@ export class DetallePedido {
     noSale: this.sesion.tienePermiso(PERMISOS.noSale),
     verMateriales: this.sesion.tienePermiso(PERMISOS.verMateriales),
     verEntregas: this.sesion.tienePermiso(PERMISOS.verEntregas),
+    crearOrden: this.sesion.tienePermiso(PERMISOS.gestionarProduccion),
   };
   protected readonly codigoNoSale = CODIGO_NO_SALE;
 
